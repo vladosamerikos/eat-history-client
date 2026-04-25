@@ -1,0 +1,270 @@
+{
+  "common": { "cancel": "Cancel", "save": "Save", "close": "Close" },
+  "welcome": {
+    "greeting": "Welcome",
+    "tagline": "Your nutrition, your story.",
+    "continue": "Continue",
+    "login": "Sign in",
+    "register": "Create account"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "or": "or",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "forgotPassword": "Forgot your password?",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithPasskey": "Continue with passkey",
+    "disabled": {
+      "google": "Google sign-in is not configured in this environment",
+      "passkey": "Passkeys are not available yet"
+    },
+    "login": {
+      "title": "Sign in",
+      "submit": "Sign in",
+      "linkShort": "Sign in",
+      "noAccount": "Don't have an account?"
+    },
+    "register": {
+      "title": "Create your account",
+      "submit": "Create account",
+      "linkShort": "Create account",
+      "haveAccount": "Already have an account?",
+      "termsPrefix": "I accept the",
+      "termsAnd": "and the",
+      "verifyHint": "We'll send you a confirmation email."
+    }
+  },
+  "errors": {
+    "required": "Required field",
+    "email": "Enter a valid email",
+    "minLength": "Minimum {{min}} characters",
+    "maxLength": "Maximum {{max}} characters",
+    "passwordsMismatch": "Passwords don't match",
+    "termsRequired": "You must accept the terms",
+    "network": "Network error, please try again",
+    "unknown": "Something went wrong",
+    "invalidCredentials": "Invalid email or password",
+    "emailTaken": "That email is already registered"
+  },
+  "forgot": {
+    "title": "Reset your password",
+    "help": "We'll send you a link to reset it.",
+    "submit": "Send link",
+    "sent": "If the account exists, we sent an email with instructions.",
+    "back": "Back to sign in"
+  },
+  "reset": {
+    "title": "New password",
+    "help": "Enter your new password.",
+    "newPassword": "New password",
+    "confirmPassword": "Repeat password",
+    "submit": "Change password",
+    "done": "Password updated. You can sign in now.",
+    "invalid": "The link is invalid or expired."
+  },
+  "verify": {
+    "title": "Confirming your email…",
+    "success": "Email confirmed!",
+    "successHelp": "You can now use all eat-history features.",
+    "fail": "We couldn't confirm your email.",
+    "failHelp": "The link may have expired. Request a new one.",
+    "resend": "Resend confirmation email",
+    "resent": "Email resent.",
+    "open": "Open the app",
+    "banner": "Please confirm your email to enable all features.",
+    "bannerCta": "Resend"
+  },
+  "terms": {
+    "title": "Terms and conditions",
+    "linkShort": "terms",
+    "lastUpdated": "Last updated: {{date}}",
+    "intro": "These terms govern the use of eat-history. By using the service you accept them.",
+    "sections": {
+      "use": { "title": "Use of the service", "body": "eat-history is a personal tool to log meals. It is not professional medical or nutrition advice." },
+      "account": { "title": "Account", "body": "You are responsible for keeping your credentials confidential." },
+      "data": { "title": "Your data", "body": "Your meals and personal data are stored as described in our Privacy Policy. You can request account deletion anytime." },
+      "liability": { "title": "Liability", "body": "Service is offered \"as is\" without warranties. We are not liable for decisions based on the data shown." },
+      "contact": { "title": "Contact", "body": "For any question email admin@vladys.dev." }
+    }
+  },
+  "privacy": {
+    "title": "Privacy policy",
+    "linkShort": "privacy policy",
+    "lastUpdated": "Last updated: {{date}}",
+    "sections": {
+      "controller": { "title": "Controller", "body": "The data controller is the eat-history team. Contact: admin@vladys.dev." },
+      "data": { "title": "Data we process", "body": "Email, name, language, meal logs, push subscriptions, and technical metadata (IP, user-agent) for security." },
+      "purpose": { "title": "Purpose", "body": "Provide the service, authenticate you, send reminders and improve the app." },
+      "legal": { "title": "Legal basis", "body": "Contract performance and consent (notifications)." },
+      "retention": { "title": "Retention", "body": "While your account is active. Request deletion anytime." },
+      "rights": { "title": "Your rights", "body": "Access, rectification, deletion, portability, objection. Write to admin@vladys.dev." },
+      "providers": { "title": "Providers", "body": "Transactional email with Resend. Storage in self-hosted MongoDB." }
+    }
+  },
+  "cookies": {
+    "title": "This app uses essential cookies",
+    "body": "We only use cookies needed to keep you signed in. We don't use marketing cookies.",
+    "accept": "Got it",
+    "more": "More info"
+  },
+  "push": {
+    "title": "Notifications",
+    "help": "Enable reminders so we can ping you at meal time.",
+    "enable": "Enable notifications",
+    "disable": "Disable",
+    "enabled": "Notifications enabled on this device.",
+    "denied": "You denied permissions. Change it in browser settings.",
+    "unsupported": "Your browser doesn't support push notifications.",
+    "test": "Send test",
+    "testSent": "Push sent!"
+  },
+  "reminders": {
+    "title": "Meal reminders",
+    "help": "We'll ping you at these times in your timezone.",
+    "enabled": "Reminders on",
+    "timezone": "Timezone",
+    "save": "Save",
+    "saved": "Saved",
+    "times": {
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "snack": "Snack",
+      "dinner": "Dinner"
+    }
+  },
+  "app": {
+    "hello": "Hi {{name}}",
+    "logout": "Sign out",
+    "capabilities": "Available features",
+    "passkey": {
+      "title": "Passkeys",
+      "help": "Sign in without a password using your device biometric or PIN.",
+      "add": "Add passkey",
+      "added": "Passkey registered"
+    }
+  },
+  "onboarding": {
+    "continue": "Continue",
+    "locale": { "title": "Choose your language", "help": "We will personalize the app for you." },
+    "name": { "title": "What's your name?", "help": "We will call you this.", "placeholder": "Your name" },
+    "goal": { "title": "What's your goal?", "help": "We tailor recommendations." },
+    "preferences": { "title": "Dietary preferences", "help": "We adjust meal suggestions." },
+    "done": { "title": "All set!", "help": "Let's go." },
+    "locales": { "en": "English", "es": "Español", "uk": "Українська" },
+    "goals": { "lose": "Lose weight", "maintain": "Maintain", "gain": "Gain muscle", "health": "Eat healthier" },
+    "diets": { "omnivore": "Omnivore", "vegetarian": "Vegetarian", "vegan": "Vegan", "pescatarian": "Pescatarian", "keto": "Keto" }
+  },
+  "nav": { "today": "Today", "foods": "Foods", "profile": "Profile", "settings": "Settings" },
+  "profile": {
+    "title": "Profile",
+    "editName": "Edit name",
+    "noName": "No name",
+    "changePhoto": "Change photo",
+    "removePhoto": "Remove photo",
+    "logout": "Sign out",
+    "theme": {
+      "title": "Theme",
+      "help": "Choose how the app looks.",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "menu": {
+      "settings": "Settings",
+      "settingsDesc": "Language and reminders",
+      "notifications": "Notifications",
+      "notificationsDesc": "Push and reminders",
+      "security": "Security",
+      "securityDesc": "Passkeys, sessions and account",
+      "privacy": "Privacy",
+      "privacyDesc": "Terms and delete account"
+    }
+  },
+  "settings": {
+    "account": { "title": "Account", "name": "Name", "email": "Email" },
+    "language": { "title": "Language", "help": "Change the application language.", "saved": "Language updated." },
+    "locales": { "en": "English", "es": "Español", "uk": "Українська" },
+    "privacy": {
+      "title": "Privacy",
+      "description": "Manage your personal data and delete your account.",
+      "deleteCta": "Delete my account",
+      "documents": "Documents",
+      "privacyPolicy": "Privacy policy",
+      "terms": "Terms & conditions"
+    },
+    "security": {
+      "email": "Email",
+      "emailVerified": "Email verified",
+      "changeEmailSoon": "Email change is coming soon.",
+      "googleTitle": "Google",
+      "googleHelp": "Link your Google account to sign in with one tap.",
+      "googleStatus": "Connect or reconnect your Google account.",
+      "googleLink": "Connect Google",
+      "noEmail": "No email associated.",
+      "tip": "We recommend keeping at least one passkey and reviewing active sessions."
+    },
+    "sessions": {
+      "title": "Active sessions",
+      "help": "Devices currently signed into your account.",
+      "empty": "No other active sessions.",
+      "revoke": "Sign out",
+      "revoked": "Session signed out.",
+      "confirmRevoke": "Sign out this session?"
+    },
+    "passkeys": {
+      "title": "Passkeys",
+      "help": "Sign in without a password using your device biometrics or PIN.",
+      "add": "Add passkey",
+      "added": "Passkey registered",
+      "empty": "You have no passkeys registered yet.",
+      "delete": "Delete",
+      "confirmDelete": "Remove this passkey from your account?",
+      "unnamed": "Device"
+    },
+    "danger": {
+      "title": "Delete account",
+      "description": "Irreversible: your account, meals, reminders and passkeys will be deleted.",
+      "typeEmail": "Type your email ({{email}}) to confirm:",
+      "emailMismatch": "Email does not match.",
+      "cta": "Delete my account"
+    }
+  },
+  "meals": {
+    "title": "Today",
+    "dailyTotal": "Daily total",
+    "add": "Add",
+    "remove": "Remove",
+    "confirm": "Add meal",
+    "noMeals": "Nothing yet.",
+    "noResults": "No results.",
+    "searchFood": "Search my foods…",
+    "changeFood": "Change",
+    "grams": "Grams",
+    "orCustom": "Or enter manually:",
+    "customName": "Name",
+    "todayLabel": "Today",
+    "yesterday": "Yesterday",
+    "tomorrow": "Tomorrow",
+    "swipeHint": "Swipe to change day",
+    "types": { "breakfast": "Breakfast", "lunch": "Lunch", "snack": "Snack", "dinner": "Dinner" },
+    "photo": { "add": "Add photo", "change": "Change photo", "remove": "Remove photo", "uploading": "Uploading photo…" },
+    "edit": "Edit",
+    "saveEdit": "Save changes"
+  },
+  "foods": {
+    "title": "My foods",
+    "add": "Add",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saveEdit": "Save changes",
+    "edit": "Edit",
+    "delete": "Delete",
+    "empty": "Your catalog is empty. Add foods you eat often to log them quickly.",
+    "search": "Search…",
+    "fields": { "name": "Name", "kcal100": "kcal/100g", "protein": "Protein", "carbs": "Carbs", "fat": "Fat", "portion": "Portion (g)" },
+    "photo": { "add": "Add photo", "change": "Change photo", "remove": "Remove photo" }
+  }
+}

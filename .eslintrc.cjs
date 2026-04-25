@@ -1,0 +1,33 @@
+module.exports = {
+  root: true,
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    project: './tsconfig.json',
+    tsconfigRootDir: __dirname,
+    sourceType: 'module',
+    ecmaFeatures: { jsx: true },
+  },
+  plugins: ['@typescript-eslint', 'react', 'react-hooks', 'react-refresh', 'import', 'jsx-a11y', 'prettier'],
+  extends: [
+    'airbnb',
+    'airbnb-typescript',
+    'airbnb/hooks',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:react/recommended',
+    'plugin:react/jsx-runtime',
+    'plugin:jsx-a11y/recommended',
+    'plugin:prettier/recommended',
+  ],
+  settings: { react: { version: 'detect' } },
+  env: { browser: true, es2022: true, node: true },
+  ignorePatterns: ['.eslintrc.cjs', 'dist', 'node_modules', 'public', 'dev-dist'],
+  rules: {
+    'react/react-in-jsx-scope': 'off',
+    'react/require-default-props': 'off',
+    'react/jsx-props-no-spreading': 'off',
+    'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    'import/prefer-default-export': 'off',
+    'import/extensions': 'off',
+    '@typescript-eslint/no-explicit-any': 'warn',
+  },
+};

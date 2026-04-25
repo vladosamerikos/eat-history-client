@@ -1,0 +1,271 @@
+{
+  "common": { "cancel": "Cancelar", "save": "Guardar", "close": "Cerrar" },
+  "welcome": {
+    "greeting": "Bienvenido",
+    "tagline": "Tu nutrición, tu historia.",
+    "continue": "Continuar",
+    "login": "Entrar",
+    "register": "Crear cuenta"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Contraseña",
+    "name": "Nombre",
+    "or": "o",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "forgotPassword": "¿Has olvidado la contraseña?",
+    "continueWithGoogle": "Continuar con Google",
+    "continueWithPasskey": "Continuar con passkey",
+    "disabled": {
+      "google": "El acceso con Google no está configurado en este entorno",
+      "passkey": "Las passkeys aún no están disponibles"
+    },
+    "login": {
+      "title": "Entrar",
+      "submit": "Entrar",
+      "linkShort": "Entrar",
+      "noAccount": "¿No tienes cuenta?"
+    },
+    "register": {
+      "title": "Crea tu cuenta",
+      "submit": "Crear cuenta",
+      "linkShort": "Crear cuenta",
+      "haveAccount": "¿Ya tienes cuenta?",
+      "termsPrefix": "Acepto los",
+      "termsAnd": "y la",
+      "verifyHint": "Te enviaremos un email para confirmar tu cuenta."
+    }
+  },
+  "errors": {
+    "required": "Campo obligatorio",
+    "email": "Introduce un email válido",
+    "minLength": "Mínimo {{min}} caracteres",
+    "maxLength": "Máximo {{max}} caracteres",
+    "passwordsMismatch": "Las contraseñas no coinciden",
+    "termsRequired": "Debes aceptar los términos",
+    "network": "Error de red, inténtalo de nuevo",
+    "unknown": "Ha ocurrido un error",
+    "generic": "Ha ocurrido un error",
+    "invalidCredentials": "Email o contraseña incorrectos",
+    "emailTaken": "Ese email ya está registrado"
+  },
+  "forgot": {
+    "title": "Recupera tu contraseña",
+    "help": "Te enviaremos un enlace para restablecerla.",
+    "submit": "Enviar enlace",
+    "sent": "Si la cuenta existe, te hemos enviado un email con instrucciones.",
+    "back": "Volver a entrar"
+  },
+  "reset": {
+    "title": "Nueva contraseña",
+    "help": "Introduce tu nueva contraseña.",
+    "newPassword": "Nueva contraseña",
+    "confirmPassword": "Repite la contraseña",
+    "submit": "Cambiar contraseña",
+    "done": "Contraseña actualizada. Ya puedes iniciar sesión.",
+    "invalid": "El enlace no es válido o ha caducado."
+  },
+  "verify": {
+    "title": "Confirmando tu email…",
+    "success": "¡Email confirmado!",
+    "successHelp": "Ya puedes usar todas las funciones de eat-history.",
+    "fail": "No hemos podido confirmar tu email.",
+    "failHelp": "El enlace puede haber caducado. Solicita uno nuevo.",
+    "resend": "Reenviar email de confirmación",
+    "resent": "Email reenviado.",
+    "open": "Ir a la app",
+    "banner": "Confirma tu email para activar todas las funciones.",
+    "bannerCta": "Reenviar"
+  },
+  "terms": {
+    "title": "Términos y condiciones",
+    "linkShort": "términos",
+    "lastUpdated": "Última actualización: {{date}}",
+    "intro": "Estos términos regulan el uso de eat-history. Al usar el servicio aceptas estas condiciones.",
+    "sections": {
+      "use": { "title": "Uso del servicio", "body": "eat-history es una herramienta personal para registrar comidas. No es consejo médico ni nutricional profesional." },
+      "account": { "title": "Cuenta", "body": "Eres responsable de mantener la confidencialidad de tu cuenta y contraseña." },
+      "data": { "title": "Tus datos", "body": "Tus comidas y datos personales se guardan según nuestra Política de Privacidad. Puedes solicitar eliminar tu cuenta en cualquier momento." },
+      "liability": { "title": "Limitación de responsabilidad", "body": "El servicio se ofrece «tal cual» sin garantías. No nos hacemos responsables de decisiones tomadas a partir de los datos mostrados." },
+      "contact": { "title": "Contacto", "body": "Para cualquier consulta escribe a admin@vladys.dev." }
+    }
+  },
+  "privacy": {
+    "title": "Política de privacidad",
+    "linkShort": "política de privacidad",
+    "lastUpdated": "Última actualización: {{date}}",
+    "sections": {
+      "controller": { "title": "Responsable", "body": "El responsable del tratamiento es el equipo de eat-history. Contacto: admin@vladys.dev." },
+      "data": { "title": "Datos que tratamos", "body": "Email, nombre, idioma, registros de comidas, suscripciones de notificaciones push y metadatos técnicos (IP, user-agent) para seguridad." },
+      "purpose": { "title": "Finalidad", "body": "Prestar el servicio, autenticarte, enviarte recordatorios y mejorar la app." },
+      "legal": { "title": "Base legal", "body": "Ejecución del contrato y consentimiento (notificaciones)." },
+      "retention": { "title": "Conservación", "body": "Mientras tengas la cuenta activa. Puedes pedir la eliminación cuando quieras." },
+      "rights": { "title": "Tus derechos", "body": "Acceso, rectificación, supresión, portabilidad, oposición. Escribe a admin@vladys.dev." },
+      "providers": { "title": "Proveedores", "body": "Email transaccional con Resend. Almacenamiento en MongoDB en infraestructura propia." }
+    }
+  },
+  "cookies": {
+    "title": "Esta app usa cookies esenciales",
+    "body": "Solo usamos cookies necesarias para mantenerte autenticado. No utilizamos cookies de marketing.",
+    "accept": "Entendido",
+    "more": "Más info"
+  },
+  "push": {
+    "title": "Notificaciones",
+    "help": "Activa los recordatorios para que te avisemos a la hora de cada comida.",
+    "enable": "Activar notificaciones",
+    "disable": "Desactivar",
+    "enabled": "Notificaciones activadas en este dispositivo.",
+    "denied": "Has denegado los permisos. Cámbialo en los ajustes del navegador.",
+    "unsupported": "Tu navegador no soporta notificaciones push.",
+    "test": "Enviar prueba",
+    "testSent": "¡Push enviada!"
+  },
+  "reminders": {
+    "title": "Recordatorios de comidas",
+    "help": "Te avisaremos a estas horas en tu zona horaria.",
+    "enabled": "Recordatorios activos",
+    "timezone": "Zona horaria",
+    "save": "Guardar",
+    "saved": "Guardado",
+    "times": {
+      "breakfast": "Desayuno",
+      "lunch": "Comida",
+      "snack": "Merienda",
+      "dinner": "Cena"
+    }
+  },
+  "app": {
+    "hello": "Hola {{name}}",
+    "logout": "Salir",
+    "capabilities": "Funcionalidades disponibles",
+    "passkey": {
+      "title": "Llaves de acceso",
+      "help": "Inicia sesión sin contraseña usando huella o PIN del dispositivo.",
+      "add": "Añadir passkey",
+      "added": "Passkey registrada"
+    }
+  },
+  "onboarding": {
+    "continue": "Continuar",
+    "locale": { "title": "Elige tu idioma", "help": "Personalizaremos la app a tu idioma." },
+    "name": { "title": "¿Cómo te llamas?", "help": "Te llamaremos así.", "placeholder": "Tu nombre" },
+    "goal": { "title": "¿Cuál es tu objetivo?", "help": "Adaptaremos las recomendaciones." },
+    "preferences": { "title": "Preferencias dietéticas", "help": "Ajustaremos las sugerencias de comida." },
+    "done": { "title": "¡Listo!", "help": "Empezamos." },
+    "locales": { "en": "English", "es": "Español", "uk": "Українська" },
+    "goals": { "lose": "Perder peso", "maintain": "Mantenerme", "gain": "Ganar masa", "health": "Comer mejor" },
+    "diets": { "omnivore": "Omnívoro", "vegetarian": "Vegetariano", "vegan": "Vegano", "pescatarian": "Pescetariano", "keto": "Keto" }
+  },
+  "nav": { "today": "Hoy", "foods": "Comidas", "profile": "Perfil", "settings": "Ajustes" },
+  "profile": {
+    "title": "Perfil",
+    "editName": "Editar nombre",
+    "noName": "Sin nombre",
+    "changePhoto": "Cambiar foto",
+    "removePhoto": "Quitar foto",
+    "logout": "Cerrar sesión",
+    "theme": {
+      "title": "Tema",
+      "help": "Elige el aspecto de la app.",
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Sistema"
+    },
+    "menu": {
+      "settings": "Ajustes",
+      "settingsDesc": "Idioma y recordatorios",
+      "notifications": "Notificaciones",
+      "notificationsDesc": "Push y recordatorios",
+      "security": "Seguridad",
+      "securityDesc": "Passkeys, sesiones y cuenta",
+      "privacy": "Privacidad",
+      "privacyDesc": "Términos y eliminar cuenta"
+    }
+  },
+  "settings": {
+    "account": { "title": "Cuenta", "name": "Nombre", "email": "Email" },
+    "language": { "title": "Idioma", "help": "Cambia el idioma de la aplicación.", "saved": "Idioma actualizado." },
+    "locales": { "en": "English", "es": "Español", "uk": "Українська" },
+    "privacy": {
+      "title": "Privacidad",
+      "description": "Gestiona tus datos personales y elimina tu cuenta.",
+      "deleteCta": "Eliminar mi cuenta",
+      "documents": "Documentos",
+      "privacyPolicy": "Política de privacidad",
+      "terms": "Términos y condiciones"
+    },
+    "security": {
+      "email": "Correo electrónico",
+      "emailVerified": "Email verificado",
+      "changeEmailSoon": "Cambiar el email estará disponible próximamente.",
+      "googleTitle": "Google",
+      "googleHelp": "Vincula tu cuenta de Google para entrar con un solo toque.",
+      "googleStatus": "Conecta o reconecta tu cuenta de Google.",
+      "googleLink": "Conectar Google",
+      "noEmail": "No hay email asociado.",
+      "tip": "Recomendamos tener al menos una passkey y revisar las sesiones activas regularmente."
+    },
+    "sessions": {
+      "title": "Sesiones activas",
+      "help": "Dispositivos donde tu cuenta está iniciada.",
+      "empty": "No hay otras sesiones activas.",
+      "revoke": "Cerrar sesión",
+      "revoked": "Sesión cerrada.",
+      "confirmRevoke": "¿Cerrar esta sesión?"
+    },
+    "passkeys": {
+      "title": "Llaves de acceso",
+      "help": "Inicia sesión sin contraseña usando huella o PIN del dispositivo.",
+      "add": "Añadir passkey",
+      "added": "Passkey registrada",
+      "empty": "Aún no tienes ninguna passkey registrada.",
+      "delete": "Eliminar",
+      "confirmDelete": "¿Eliminar esta passkey de tu cuenta?",
+      "unnamed": "Dispositivo"
+    },
+    "danger": {
+      "title": "Eliminar cuenta",
+      "description": "Acción irreversible: se borrarán tu cuenta, comidas, recordatorios y passkeys.",
+      "typeEmail": "Escribe tu email ({{email}}) para confirmar:",
+      "emailMismatch": "El email no coincide.",
+      "cta": "Eliminar mi cuenta"
+    }
+  },
+  "meals": {
+    "title": "Hoy",
+    "dailyTotal": "Total del día",
+    "add": "Añadir",
+    "remove": "Quitar",
+    "confirm": "Añadir comida",
+    "noMeals": "Nada todavía.",
+    "noResults": "Sin resultados.",
+    "searchFood": "Buscar en mis comidas…",
+    "changeFood": "Cambiar",
+    "grams": "Gramos",
+    "orCustom": "O introduce manualmente:",
+    "customName": "Nombre",
+    "todayLabel": "Hoy",
+    "yesterday": "Ayer",
+    "tomorrow": "Mañana",
+    "swipeHint": "Desliza para cambiar de día",
+    "types": { "breakfast": "Desayuno", "lunch": "Comida", "snack": "Merienda", "dinner": "Cena" },
+    "photo": { "add": "Añadir foto", "change": "Cambiar foto", "remove": "Quitar foto", "uploading": "Subiendo foto…" },
+    "edit": "Editar",
+    "saveEdit": "Guardar cambios"
+  },
+  "foods": {
+    "title": "Mis comidas",
+    "add": "Añadir",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "saveEdit": "Guardar cambios",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "empty": "Tu catálogo está vacío. Añade tus comidas frecuentes para registrarlas rápido.",
+    "search": "Buscar…",
+    "fields": { "name": "Nombre", "kcal100": "kcal/100g", "protein": "Proteína", "carbs": "Carbs", "fat": "Grasa", "portion": "Porción (g)" },
+    "photo": { "add": "Añadir foto", "change": "Cambiar foto", "remove": "Quitar foto" }
+  }
+}
