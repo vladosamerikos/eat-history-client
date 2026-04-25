@@ -5,6 +5,7 @@ import { useAuthStore } from '@/features/auth/auth.store';
 import { updateSettings } from '../settings.api';
 import { PageHeader, Section } from './_shared';
 import { Alert } from '@/components/ui/Alert';
+import { Select } from '@/components/ui/Select';
 
 const DEFAULT_TIMES = { breakfast: '09:00', lunch: '14:00', snack: '17:30', dinner: '21:00' };
 type MealKey = keyof typeof DEFAULT_TIMES;
@@ -72,17 +73,15 @@ export function GeneralSettingsPage() {
       />
 
       <Section title={t('settings.language.title')} description={t('settings.language.help')}>
-        <select
+        <Select
           value={currentLocale}
-          onChange={(e) => onChangeLang(e.target.value)}
-          className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
-        >
-          {supportedLocales.map((loc) => (
-            <option key={loc} value={loc}>
-              {t(`settings.locales.${loc}`, { defaultValue: loc })}
-            </option>
-          ))}
-        </select>
+          onValueChange={(v) => onChangeLang(v)}
+          triggerClassName="h-11 w-full rounded-lg"
+          options={supportedLocales.map((loc) => ({
+            value: loc,
+            label: t(`settings.locales.${loc}`, { defaultValue: loc }),
+          }))}
+        />
         {langMsg && (
           <Alert variant={langMsg.kind === 'error' ? 'error' : 'success'} className="mt-3">
             {langMsg.text}

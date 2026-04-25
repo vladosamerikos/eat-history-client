@@ -12,10 +12,10 @@ export function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-background p-4 shadow-sm">
-      {title && <h3 className="text-sm font-semibold text-foreground">{title}</h3>}
-      {description && <p className="mb-3 mt-0.5 text-xs text-muted-foreground">{description}</p>}
-      <div className={description || title ? '' : ''}>{children}</div>
+    <section className="min-w-0 overflow-hidden rounded-2xl border border-border bg-background p-4 shadow-sm">
+      {title && <h3 className="break-words text-sm font-semibold text-foreground">{title}</h3>}
+      {description && <p className="mb-3 mt-0.5 break-words text-xs text-muted-foreground">{description}</p>}
+      <div className="min-w-0">{children}</div>
     </section>
   );
 }

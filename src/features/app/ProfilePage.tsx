@@ -14,6 +14,7 @@ import {
   Pencil,
   Check,
   X,
+  Sparkles,
 } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { logoutUser } from '@/features/auth/auth.api';
@@ -216,7 +217,7 @@ export function ProfilePage() {
       </Section>
 
       {/* Menú */}
-      <div className="grid gap-2">
+      <div className="grid min-w-0 gap-2">
         <MenuLink
           to="/app/profile/settings"
           icon={Settings}
@@ -241,6 +242,14 @@ export function ProfilePage() {
           title={t('profile.menu.privacy')}
           description={t('profile.menu.privacyDesc')}
         />
+        {user?.role === 'admin' && (
+          <MenuLink
+            to="/app/admin/ai-models"
+            icon={Sparkles}
+            title={t('profile.menu.aiModels') ?? 'Modelos de IA'}
+            description={t('profile.menu.aiModelsDesc') ?? 'Configura los modelos disponibles'}
+          />
+        )}
       </div>
 
       {/* Logout */}

@@ -1,5 +1,5 @@
 {
-  "common": { "cancel": "Cancel", "save": "Save", "close": "Close" },
+  "common": { "cancel": "Cancel", "save": "Save", "close": "Close", "back": "Back", "loading": "Loading…", "empty": "No results.", "remove": "Remove" },
   "welcome": {
     "greeting": "Welcome",
     "tagline": "Your nutrition, your story.",
@@ -157,7 +157,56 @@
     "goals": { "lose": "Lose weight", "maintain": "Maintain", "gain": "Gain muscle", "health": "Eat healthier" },
     "diets": { "omnivore": "Omnivore", "vegetarian": "Vegetarian", "vegan": "Vegan", "pescatarian": "Pescatarian", "keto": "Keto" }
   },
-  "nav": { "today": "Today", "foods": "Foods", "profile": "Profile", "settings": "Settings" },
+  "nav": { "today": "Today", "foods": "Foods", "chat": "Chat", "profile": "Profile", "settings": "Settings" },
+  "chat": {
+    "title": "AI chat",
+    "placeholder": "Write a message…",
+    "send": "Send",
+    "empty": "Start the conversation with one of these suggestions or write your own question.",
+    "summary": "Summary",
+    "generateSummary": "Generate summary",
+    "summarizing": "Generating…",
+    "history": "Your chats",
+    "historyEmpty": "No chats yet. Create one or open today's chat from the summary.",
+    "today": "Today",
+    "deleteConfirm": "Delete this chat?",
+    "delete": "Delete",
+    "thinking": "Thinking…",
+    "attachImage": "Attach image",
+    "removeImage": "Remove image",
+    "model": "Model",
+    "modelDefault": "Default",
+    "errorPrefix": "Error",
+    "newChat": "New chat",
+    "newChatTitle": "Name your chat",
+    "namePlaceholder": "Chat name",
+    "create": "Create",
+    "cancel": "Cancel",
+    "rename": "Rename",
+    "renamePlaceholder": "New title",
+    "untitled": "Untitled",
+    "dayChat": "Chat for {{date}}",
+    "openDayChat": "Chat with AI about this day",
+    "newDayChat": "New chat about this day",
+    "prompts": {
+      "title": "Suggestions",
+      "manage": "My prompts",
+      "add": "Add prompt",
+      "empty": "Save questions you use often and they'll appear here.",
+      "savePrompt": "Save as prompt",
+      "promptName": "Short title",
+      "promptContent": "Prompt content",
+      "save": "Save",
+      "deleteConfirm": "Delete this prompt?",
+      "presets": {
+        "analyze": "What do you think about today's meals?",
+        "missing": "Which nutrients might I be missing?",
+        "improve": "Give me 3 concrete improvements for tomorrow",
+        "snack": "Suggest a balanced snack for me now",
+        "recipe": "What simple recipe can I make with what I have?"
+      }
+    }
+  },
   "profile": {
     "title": "Profile",
     "editName": "Edit name",
@@ -180,7 +229,9 @@
       "security": "Security",
       "securityDesc": "Passkeys, sessions and account",
       "privacy": "Privacy",
-      "privacyDesc": "Terms and delete account"
+      "privacyDesc": "Terms and delete account",
+      "aiModels": "AI models",
+      "aiModelsDesc": "Configure available models"
     }
   },
   "settings": {
@@ -202,6 +253,8 @@
       "googleTitle": "Google",
       "googleHelp": "Link your Google account to sign in with one tap.",
       "googleStatus": "Connect or reconnect your Google account.",
+      "googleConnected": "Google account connected.",
+      "googleReconnect": "Reconnect Google",
       "googleLink": "Connect Google",
       "noEmail": "No email associated.",
       "tip": "We recommend keeping at least one passkey and reviewing active sessions."
@@ -250,9 +303,17 @@
     "tomorrow": "Tomorrow",
     "swipeHint": "Swipe to change day",
     "types": { "breakfast": "Breakfast", "lunch": "Lunch", "snack": "Snack", "dinner": "Dinner" },
-    "photo": { "add": "Add photo", "change": "Change photo", "remove": "Remove photo", "uploading": "Uploading photo…" },
+    "photo": { "add": "Add photo", "change": "Change photo", "remove": "Remove photo", "uploading": "Uploading photo…", "generalHint": "Photo of the whole plate (optional)" },
     "edit": "Edit",
-    "saveEdit": "Save changes"
+    "saveEdit": "Save changes",
+    "addItem": "Add item",
+    "qty": "Quantity",
+    "gramsPerUnit": "g / unit",
+    "pickOrType": "Pick a food or type",
+    "picker": { "title": "Pick a food", "search": "Search food…" },
+    "entryPhoto": { "add": "Item photo", "change": "Change photo" },
+    "ai": { "fromPhoto": "AI from photo", "fromName": "AI from name", "needsPhoto": "Add a photo first", "needsName": "Type the name first" },
+    "errors": { "noEntries": "Add at least one item." }
   },
   "foods": {
     "title": "My foods",
@@ -265,6 +326,20 @@
     "empty": "Your catalog is empty. Add foods you eat often to log them quickly.",
     "search": "Search…",
     "fields": { "name": "Name", "kcal100": "kcal/100g", "protein": "Protein", "carbs": "Carbs", "fat": "Fat", "portion": "Portion (g)" },
+    "per100Hint": "Macros are per 100g. The portion is only used as default amount when logging.",
+    "ai": { "fromName": "AI from name", "fromPhoto": "AI from photo", "needsName": "Type the name first", "needsPhoto": "Add a photo first" },
     "photo": { "add": "Add photo", "change": "Change photo", "remove": "Remove photo" }
+  },
+  "admin": {
+    "forbidden": "Admins only.",
+    "aiModels": {
+      "title": "AI models",
+      "subtitle": "Manage which models are available in the app.",
+      "search": "Search by id, name or description",
+      "preferences": "My preference",
+      "taskVision": "Vision (photo)",
+      "taskText": "Text (name)",
+      "available": "Available"
+    }
   }
 }

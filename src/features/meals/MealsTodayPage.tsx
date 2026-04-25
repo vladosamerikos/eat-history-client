@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -7,6 +8,7 @@ import {
   ChevronRight,
   Coffee,
   Cookie,
+  MessageCircle,
   Moon,
   Pencil,
   Plus,
@@ -24,16 +26,25 @@ import {
   type MealType,
 } from './meals.api';
 import { AddMealModal } from './AddMealModal';
+import { PhotoViewer } from '@/components/ui/PhotoViewer';
 
+// IMPORTANTE: aritmética en UTC para evitar el bug de TZ.
+// `new Date('YYYY-MM-DDT00:00:00')` se parsea como hora local, pero
+// `toISOString()` la devuelve en UTC. En timezones con offset positivo
+// (p.ej. Europe/Madrid +2) eso provocaba que addDays(-1) saltara 2 días
+// y addDays(+1) no cambiara de día. Resolvemos parseando y operando en UTC.
 function addDays(iso: string, delta: number): string {
-  const d = new Date(`${iso}T00:00:00`);
-  d.setDate(d.getDate() + delta);
-  return d.toISOString().slice(0, 10);
+  const [y, m, d] = iso.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, (m || 1) - 1, d || 1));
+  dt.setUTCDate(dt.getUTCDate() + delta);
+  return dt.toISOString().slice(0, 10);
 }
 
 function isoDiffDays(a: string, b: string): number {
-  const da = new Date(`${a}T00:00:00`).getTime();
-  const db = new Date(`${b}T00:00:00`).getTime();
+  const [ay, am, ad] = a.split('-').map(Number);
+  const [by, bm, bd] = b.split('-').map(Number);
+  const da = Date.UTC(ay, (am || 1) - 1, ad || 1);
+  const db = Date.UTC(by, (bm || 1) - 1, bd || 1);
   return Math.round((da - db) / 86_400_000);
 }
 
@@ -104,9 +115,11 @@ function DateStrip({ selected, onSelect, locale }: DateStripProps) {
 export function MealsTodayPage() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [date, setDate] = useState(todayISO());
   const [adding, setAdding] = useState<MealType | null>(null);
   const [editing, setEditing] = useState<Meal | null>(null);
+  const [viewingPhoto, setViewingPhoto] = useState<string | null>(null);
 
   const meals = useQuery<Meal[]>({
     queryKey: ['meals', date],
@@ -143,65 +156,86 @@ export function MealsTodayPage() {
     }).format(new Date(`${date}T00:00:00`));
   }, [date, t, i18n.language]);
 
-  // Swipe nativo con touch events + drag visual. Reemplaza framer-motion drag,
-  // que bloqueaba la dirección hacia adelante en iOS/Android al estar dentro
-  // de AnimatePresence. Usamos touchstart/move/end (no pointer events) porque
-  // así no nos afecta el `touch-action`.
+  // Swipe nativo con touch events + drag visual.
+  // Bug detectado: usar `changedTouches[0]` y `addDays(date, ...)` con closure
+  // estable provocaba dx=0 (en algunos móviles) y stale-date (skip 1 día).
+  // Solución: trackear el último clientX/Y de touchmove + functional updater.
+  // Además usamos changedTouches[0] en touchend porque en swipes muy rápidos
+  // touchmove puede no dispararse y dx quedaba a 0 (bug der→izq).
   const touchStart = useRef<{ x: number; y: number; t: number } | null>(null);
-  const lastSwipeAt = useRef(0);
+  const lastPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const isSwiping = useRef(false);
+  const isLocked = useRef(false); // bloqueo durante animación para evitar saltos dobles
   const [dragX, setDragX] = useState(0);
   const [swipeDir, setSwipeDir] = useState<1 | -1>(1); // 1 = avanza día (entra desde derecha)
-  const SWIPE_THRESHOLD = 55;
+  const SWIPE_THRESHOLD = 50;
 
   const goNext = () => {
+    if (isLocked.current) return;
+    isLocked.current = true;
+    window.setTimeout(() => {
+      isLocked.current = false;
+    }, 350);
     setSwipeDir(1);
-    setDate(addDays(date, 1));
+    setDate((d) => addDays(d, 1));
   };
   const goPrev = () => {
+    if (isLocked.current) return;
+    isLocked.current = true;
+    window.setTimeout(() => {
+      isLocked.current = false;
+    }, 350);
     setSwipeDir(-1);
-    setDate(addDays(date, -1));
+    setDate((d) => addDays(d, -1));
   };
 
   const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (isLocked.current) return;
     const t0 = e.touches[0];
     if (!t0) return;
     touchStart.current = { x: t0.clientX, y: t0.clientY, t: Date.now() };
+    lastPos.current = { x: t0.clientX, y: t0.clientY };
+    isSwiping.current = false;
   };
   const onTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
     const start = touchStart.current;
     if (!start) return;
     const t0 = e.touches[0];
     if (!t0) return;
+    lastPos.current = { x: t0.clientX, y: t0.clientY };
     const dx = t0.clientX - start.x;
     const dy = t0.clientY - start.y;
-    // Solo seguimos si el gesto es claramente horizontal
-    if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) {
-      // Resistencia tipo iOS: amortiguamos el desplazamiento
+    if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+      isSwiping.current = true;
       const damped = Math.sign(dx) * Math.min(Math.abs(dx), 120);
       setDragX(damped);
     }
   };
-  const onTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+  const finishSwipe = (endX: number, endY: number) => {
     const start = touchStart.current;
     touchStart.current = null;
     setDragX(0);
     if (!start) return;
-    const t0 = e.changedTouches[0];
-    if (!t0) return;
-    const dx = t0.clientX - start.x;
-    const dy = t0.clientY - start.y;
+    const dx = endX - start.x;
+    const dy = endY - start.y;
     const dt = Date.now() - start.t;
+    isSwiping.current = false;
     if (dt > 800) return;
     if (Math.abs(dx) < SWIPE_THRESHOLD) return;
     if (Math.abs(dx) < Math.abs(dy) * 1.2) return;
-    const now = Date.now();
-    if (now - lastSwipeAt.current < 250) return;
-    lastSwipeAt.current = now;
     if (dx < 0) goNext();
     else goPrev();
   };
+  const onTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    // Usar changedTouches[0] porque touches está vacío al lift, y en swipes
+    // rápidos puede que no haya touchmove (lastPos == start).
+    const c = e.changedTouches[0];
+    if (c) finishSwipe(c.clientX, c.clientY);
+    else finishSwipe(lastPos.current.x, lastPos.current.y);
+  };
   const onTouchCancel = () => {
     touchStart.current = null;
+    isSwiping.current = false;
     setDragX(0);
   };
 
@@ -260,10 +294,21 @@ export function MealsTodayPage() {
             <section className="my-4 grid gap-3 rounded-2xl border border-border bg-card p-4 text-card-foreground shadow-sm">
               <div className="flex items-baseline justify-between gap-2">
                 <span className="text-sm text-muted-foreground">{t('meals.dailyTotal')}</span>
-                <span className="text-3xl font-semibold tabular-nums">
-                  {summary.data?.totalKcal ?? 0}
-                  <span className="ml-1 text-sm font-normal text-muted-foreground">kcal</span>
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-3xl font-semibold tabular-nums">
+                    {summary.data?.totalKcal ?? 0}
+                    <span className="ml-1 text-sm font-normal text-muted-foreground">kcal</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/app/chat?date=${date}`)}
+                    className="grid h-9 w-9 place-items-center rounded-full text-primary hover:bg-primary/10"
+                    aria-label={t('chat.openDayChat')}
+                    title={t('chat.openDayChat')}
+                  >
+                    <MessageCircle className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
               {summary.data && (
                 <div className="grid grid-cols-3 gap-2 text-center text-xs">
@@ -324,7 +369,8 @@ export function MealsTodayPage() {
                                 src={m.photoUrl}
                                 alt=""
                                 loading="lazy"
-                                className="h-12 w-12 flex-shrink-0 rounded-lg object-cover"
+                                onClick={() => setViewingPhoto(m.photoUrl ?? null)}
+                                className="h-12 w-12 flex-shrink-0 cursor-zoom-in rounded-lg object-cover transition-transform active:scale-95"
                               />
                             ) : (
                               <span className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-lg bg-background text-muted-foreground">
@@ -387,6 +433,7 @@ export function MealsTodayPage() {
           onClose={() => setEditing(null)}
         />
       )}
+      <PhotoViewer src={viewingPhoto} onClose={() => setViewingPhoto(null)} />
     </div>
   );
 }

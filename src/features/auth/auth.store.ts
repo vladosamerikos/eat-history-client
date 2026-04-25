@@ -8,11 +8,13 @@ export interface PublicUser {
   avatarUrl?: string;
   role: string;
   emailVerified: boolean;
+  googleConnected?: boolean;
   onboardingCompleted: boolean;
   onboardingStep: string;
   remindersEnabled?: boolean;
   reminderTimes?: { breakfast: string; lunch: string; snack: string; dinner: string };
   reminderTimezone?: string;
+  aiModelPreferences?: { vision?: string; text?: string; chat?: string };
 }
 
 interface AuthState {

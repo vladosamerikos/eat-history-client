@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { Alert } from '@/components/ui/Alert';
+import { Select } from '@/components/ui/Select';
 import { ApiError } from '@/lib/api';
 import {
   fetchOnboardingProgress,
@@ -92,17 +93,12 @@ export function OnboardingPage() {
 
         <div className="mb-4 flex flex-col gap-2">
           {step === 'locale' && (
-            <select
+            <Select
               value={locale}
-              onChange={(e) => setLocale(e.target.value)}
-              className="h-11 rounded-lg border border-border bg-background px-3"
-            >
-              {LOCALES.map((l) => (
-                <option key={l} value={l}>
-                  {t(`onboarding.locales.${l}`)}
-                </option>
-              ))}
-            </select>
+              onValueChange={setLocale}
+              triggerClassName="h-11 w-full rounded-lg"
+              options={LOCALES.map((l) => ({ value: l, label: t(`onboarding.locales.${l}`) }))}
+            />
           )}
           {step === 'name' && (
             <input
@@ -132,17 +128,18 @@ export function OnboardingPage() {
             </div>
           )}
           {step === 'preferences' && (
-            <select
+            <Select
               value={diet}
-              onChange={(e) => setDiet(e.target.value)}
-              className="h-11 rounded-lg border border-border bg-background px-3"
-            >
-              <option value="omnivore">{t('onboarding.diets.omnivore')}</option>
-              <option value="vegetarian">{t('onboarding.diets.vegetarian')}</option>
-              <option value="vegan">{t('onboarding.diets.vegan')}</option>
-              <option value="pescatarian">{t('onboarding.diets.pescatarian')}</option>
-              <option value="keto">{t('onboarding.diets.keto')}</option>
-            </select>
+              onValueChange={setDiet}
+              triggerClassName="h-11 w-full rounded-lg"
+              options={[
+                { value: 'omnivore', label: t('onboarding.diets.omnivore') },
+                { value: 'vegetarian', label: t('onboarding.diets.vegetarian') },
+                { value: 'vegan', label: t('onboarding.diets.vegan') },
+                { value: 'pescatarian', label: t('onboarding.diets.pescatarian') },
+                { value: 'keto', label: t('onboarding.diets.keto') },
+              ]}
+            />
           )}
         </div>
 

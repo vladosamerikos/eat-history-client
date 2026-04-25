@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Camera, Loader2, Pencil, Sparkles, Trash2 } from 'lucide-react';
 import {
   createFood,
   deleteFood,
@@ -10,6 +11,7 @@ import {
   uploadFoodPhoto,
   type Food,
 } from './foods.api';
+import { estimateNutrition } from '@/features/ai/ai.api';
 import { Alert } from '@/components/ui/Alert';
 
 interface FormState {
@@ -42,7 +44,7 @@ function fromFood(f: Food): FormState {
 }
 
 export function FoodsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const [q, setQ] = useState('');
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -51,6 +53,7 @@ export function FoodsPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoExistingUrl, setPhotoExistingUrl] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
+  const [aiBusy, setAiBusy] = useState<'name' | 'photo' | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const previewPhoto = useMemo(
@@ -126,6 +129,34 @@ export function FoodsPage() {
     setError(null);
   };
 
+  const aiFill = async (mode: 'name' | 'photo') => {
+    if (mode === 'name' && !form.name.trim()) return;
+    if (mode === 'photo' && !photoFile) return;
+    setAiBusy(mode);
+    setError(null);
+    try {
+      // weightG=100 → los valores devueltos están por 100g.
+      const result = await estimateNutrition({
+        image: mode === 'photo' ? photoFile ?? undefined : undefined,
+        name: form.name.trim() || undefined,
+        weightG: 100,
+        locale: i18n.language,
+      });
+      setForm((prev) => ({
+        ...prev,
+        name: prev.name.trim() ? prev.name : result.name ?? prev.name,
+        kcal: result.kcal != null ? String(Math.round(result.kcal)) : prev.kcal,
+        protein: result.proteinG != null ? String(Math.round(result.proteinG * 10) / 10) : prev.protein,
+        carbs: result.carbsG != null ? String(Math.round(result.carbsG * 10) / 10) : prev.carbs,
+        fat: result.fatG != null ? String(Math.round(result.fatG * 10) / 10) : prev.fat,
+      }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'AI failed');
+    } finally {
+      setAiBusy(null);
+    }
+  };
+
   return (
     <div className="w-full overflow-hidden">
       <header className="mb-4 flex items-center justify-between gap-2">
@@ -163,6 +194,11 @@ export function FoodsPage() {
             required
             className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
           />
+
+          <p className="-mt-1 text-[11px] text-muted-foreground">
+            {t('foods.per100Hint') ?? 'Los macros son por 100g. La porción se usa solo como cantidad por defecto al registrar.'}
+          </p>
+
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
             <NumField label={t('foods.fields.kcal100')} value={form.kcal} onChange={(v) => setForm({ ...form, kcal: v })} />
             <NumField label={t('foods.fields.protein')} value={form.protein} onChange={(v) => setForm({ ...form, protein: v })} />
@@ -206,11 +242,38 @@ export function FoodsPage() {
               onClick={() => fileRef.current?.click()}
               className="h-10 flex-1 rounded-full border border-border px-4 text-sm font-medium hover:bg-muted"
             >
-              {previewPhoto ? t('foods.photo.change') : t('foods.photo.add')}
+              <span className="inline-flex items-center justify-center gap-1.5">
+                <Camera className="h-4 w-4" />
+                {previewPhoto ? t('foods.photo.change') : t('foods.photo.add')}
+              </span>
             </button>
           </div>
 
           {error && <Alert variant="error">{error}</Alert>}
+
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              disabled={aiBusy !== null || !form.name.trim()}
+              onClick={() => aiFill('name')}
+              title={!form.name.trim() ? (t('foods.ai.needsName') ?? 'Escribe el nombre primero') : undefined}
+              className="inline-flex h-8 items-center gap-1 rounded-full bg-primary/10 px-3 text-[11px] font-medium text-primary hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-primary/20"
+            >
+              {aiBusy === 'name' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+              {t('foods.ai.fromName') ?? 'IA desde nombre'}
+            </button>
+            <button
+              type="button"
+              disabled={aiBusy !== null || !photoFile}
+              onClick={() => aiFill('photo')}
+              title={!photoFile ? (t('foods.ai.needsPhoto') ?? 'Añade una foto primero') : undefined}
+              className="inline-flex h-8 items-center gap-1 rounded-full bg-primary/10 px-3 text-[11px] font-medium text-primary hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-primary/20"
+            >
+              {aiBusy === 'photo' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+              {t('foods.ai.fromPhoto') ?? 'IA desde foto'}
+            </button>
+          </div>
+
           <button
             type="submit"
             disabled={saveMut.isPending}
@@ -230,7 +293,7 @@ export function FoodsPage() {
           {foods.map((f) => (
             <li
               key={f._id}
-              className="flex items-center gap-3 rounded-xl border border-border px-3 py-2"
+              className="flex min-w-0 items-center gap-3 rounded-xl border border-border px-3 py-2"
             >
               {f.imageUrl ? (
                 <img src={f.imageUrl} alt="" className="h-12 w-12 flex-shrink-0 rounded-lg object-cover" />
@@ -241,25 +304,31 @@ export function FoodsPage() {
               )}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{f.name}</p>
-                <p className="truncate text-xs text-muted-foreground">
+                <p className="truncate text-[11px] text-muted-foreground">
                   {Math.round(f.nutritionPer100.kcal)} kcal/100g · P{Math.round(f.nutritionPer100.protein)} · C{Math.round(f.nutritionPer100.carbs)} · G{Math.round(f.nutritionPer100.fat)}
                 </p>
               </div>
               {f.userId && (
-                <div className="flex flex-shrink-0 items-center gap-2">
+                <div className="flex flex-shrink-0 items-center gap-1">
                   <button
                     type="button"
                     onClick={() => onEdit(f)}
-                    className="text-xs text-primary hover:underline"
+                    className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+                    aria-label={t('foods.edit')}
                   >
-                    {t('foods.edit')}
+                    <Pencil className="h-4 w-4" />
                   </button>
                   <button
                     type="button"
-                    onClick={() => deleteMut.mutate(f._id)}
-                    className="text-xs text-destructive hover:underline"
+                    onClick={() => {
+                      if (window.confirm(t('foods.deleteConfirm', { defaultValue: t('foods.delete') + '?' }))) {
+                        deleteMut.mutate(f._id);
+                      }
+                    }}
+                    className="grid h-8 w-8 place-items-center rounded-full text-destructive hover:bg-destructive/10"
+                    aria-label={t('foods.delete')}
                   >
-                    {t('foods.delete')}
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               )}

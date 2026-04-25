@@ -1,0 +1,97 @@
+import { api } from '@/lib/api';
+import { env } from '@/config/env';
+import { useAuthStore } from '@/features/auth/auth.store';
+
+export type AiTier = 'free' | 'preview' | 'paid' | 'limited';
+export type AiCapability = 'vision' | 'text' | 'json';
+export type AiProvider = 'openai' | 'google';
+
+export interface AiModelDto {
+  id: string;
+  provider: AiProvider;
+  modelId: string;
+  displayName: string;
+  description?: string;
+  capabilities: AiCapability[];
+  tier: AiTier;
+  contextWindow?: number;
+}
+
+export interface AiAdminModelDto extends AiModelDto {
+  isActive: boolean;
+  order: number;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface EstimateResult {
+  name?: string;
+  weightG?: number;
+  kcal?: number;
+  proteinG?: number;
+  carbsG?: number;
+  fatG?: number;
+  confidence?: number;
+  notes?: string;
+  modelUsed?: string;
+  provider?: string;
+}
+
+export const listAiModels = () => api<AiModelDto[]>(`/ai/models`);
+
+export const updateAiPreference = (body: {
+  vision?: string | null;
+  text?: string | null;
+}) => api(`/ai/preference`, { method: 'PATCH', json: body });
+
+/**
+ * Llama al endpoint de estimación. Acepta cualquier combinación entre imagen,
+ * nombre y peso (al menos uno entre imagen o nombre debe estar presente).
+ */
+export async function estimateNutrition(input: {
+  image?: File;
+  name?: string;
+  weightG?: number;
+  locale?: string;
+}): Promise<EstimateResult> {
+  const token = useAuthStore.getState().accessToken;
+  const fd = new FormData();
+  if (input.image) fd.append('file', input.image);
+  if (input.name) fd.append('name', input.name);
+  if (input.weightG != null) fd.append('weightG', String(input.weightG));
+  if (input.locale) fd.append('locale', input.locale);
+  const res = await fetch(`${env.apiBaseUrl}/ai/estimate`, {
+    method: 'POST',
+    body: fd,
+    credentials: 'include',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`AI estimate failed (${res.status}): ${txt}`);
+  }
+  return (await res.json()) as EstimateResult;
+}
+
+// ---- Admin ----
+
+export const adminListAiModels = (params: { provider?: AiProvider; q?: string } = {}) => {
+  const sp = new URLSearchParams();
+  if (params.provider) sp.set('provider', params.provider);
+  if (params.q) sp.set('q', params.q);
+  const qs = sp.toString();
+  return api<AiAdminModelDto[]>(`/admin/ai/models${qs ? `?${qs}` : ''}`);
+};
+
+export const adminCreateAiModel = (body: Partial<AiAdminModelDto>) =>
+  api<{ id: string }>(`/admin/ai/models`, { method: 'POST', json: body });
+
+export const adminUpdateAiModel = (id: string, body: Partial<AiAdminModelDto>) =>
+  api<{ id: string }>(`/admin/ai/models/${id}`, { method: 'PATCH', json: body });
+
+export const adminDeleteAiModel = (id: string) =>
+  api<{ ok: boolean }>(`/admin/ai/models/${id}`, { method: 'DELETE' });
+
+export const adminVerifyAiModel = (id: string) =>
+  api<{ ok: boolean; message?: string }>(`/admin/ai/models/${id}/verify`, { method: 'POST' });

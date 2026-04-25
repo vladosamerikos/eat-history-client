@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Globe, KeyRound, MailCheck, Smartphone, Trash2, AlertTriangle } from 'lucide-react';
+import { Globe, KeyRound, MailCheck, Smartphone, Trash2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { resendVerifyEmail } from '@/features/auth/auth.api';
 import {
@@ -120,7 +120,7 @@ export function SecurityPage() {
     });
 
   return (
-    <div className="grid w-full gap-4 overflow-hidden">
+    <div className="grid w-full min-w-0 gap-4 overflow-hidden">
       <PageHeader
         back="/app/profile"
         title={t('profile.menu.security')}
@@ -135,11 +135,11 @@ export function SecurityPage() {
         {user && !user.emailVerified ? (
           <Alert variant="info">
             <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <span className="break-words">{t('verify.banner')}</span>
+              <span className="min-w-0 break-words">{t('verify.banner')}</span>
               <button
                 type="button"
                 onClick={onResendVerify}
-                className="rounded-full border border-border px-3 py-1 text-xs hover:bg-muted"
+                className="flex-shrink-0 rounded-full border border-border px-3 py-1 text-xs hover:bg-muted"
               >
                 {t('verify.bannerCta')}
               </button>
@@ -147,11 +147,11 @@ export function SecurityPage() {
           </Alert>
         ) : (
           <p className="inline-flex items-center gap-1 text-xs text-success">
-            <MailCheck className="h-4 w-4" />
+            <MailCheck className="h-4 w-4 flex-shrink-0" />
             {t('settings.security.emailVerified')}
           </p>
         )}
-        <p className="mt-3 text-xs text-muted-foreground">
+        <p className="mt-3 break-words text-xs text-muted-foreground">
           {t('settings.security.changeEmailSoon')}
         </p>
         {verifyMsg && (
@@ -165,17 +165,25 @@ export function SecurityPage() {
       <Section title={t('settings.security.googleTitle')} description={t('settings.security.googleHelp')}>
         {user?.email ? (
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <p className="inline-flex items-center gap-2 text-sm">
-              <Globe className="h-4 w-4 text-muted-foreground" />
-              <span className="break-all">
-                {t('settings.security.googleStatus')}
+            <p className="inline-flex min-w-0 items-center gap-2 text-sm">
+              {user.googleConnected ? (
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-success" />
+              ) : (
+                <Globe className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+              )}
+              <span className="min-w-0 break-words">
+                {user.googleConnected
+                  ? t('settings.security.googleConnected')
+                  : t('settings.security.googleStatus')}
               </span>
             </p>
             <a
               href={`${env.apiBaseUrl}/auth/google`}
-              className="inline-flex h-10 items-center justify-center rounded-full border border-border px-4 text-sm font-medium hover:bg-muted"
+              className="inline-flex h-10 flex-shrink-0 items-center justify-center rounded-full border border-border px-4 text-sm font-medium hover:bg-muted"
             >
-              {t('settings.security.googleLink')}
+              {user.googleConnected
+                ? t('settings.security.googleReconnect')
+                : t('settings.security.googleLink')}
             </a>
           </div>
         ) : (
@@ -220,7 +228,7 @@ export function SecurityPage() {
         <button
           type="button"
           onClick={onAddPasskey}
-          className="mt-3 h-10 rounded-full border border-border px-4 text-sm font-medium hover:bg-muted"
+          className="mt-3 inline-flex h-10 items-center justify-center rounded-full border border-border px-4 text-sm font-medium hover:bg-muted"
         >
           {t('settings.passkeys.add')}
         </button>
@@ -272,9 +280,9 @@ export function SecurityPage() {
         )}
       </Section>
 
-      <p className="inline-flex items-start gap-2 px-1 text-xs text-muted-foreground">
-        <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-        <span className="break-words">{t('settings.security.tip')}</span>
+      <p className="flex items-start gap-2 px-1 text-xs text-muted-foreground">
+        <AlertTriangle className="mt-[2px] h-4 w-4 flex-shrink-0" />
+        <span className="min-w-0 break-words">{t('settings.security.tip')}</span>
       </p>
     </div>
   );
