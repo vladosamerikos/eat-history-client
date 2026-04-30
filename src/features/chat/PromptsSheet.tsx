@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 import {
   createPrompt,
   deletePrompt,
@@ -18,6 +19,7 @@ interface Props {
 export function PromptsSheet({ onClose, onPick }: Props) {
   const { t } = useTranslation();
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const promptsQ = useQuery({ queryKey: ['chat', 'prompts'], queryFn: listPrompts });
   const [editing, setEditing] = useState<ChatPrompt | null>(null);
   const [creating, setCreating] = useState(false);
@@ -175,8 +177,14 @@ export function PromptsSheet({ onClose, onPick }: Props) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    if (window.confirm(t('chat.prompts.deleteConfirm'))) deleteMut.mutate(p.id);
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: t('common.deleteConfirmTitle'),
+                      description: t('chat.prompts.deleteConfirm'),
+                      destructive: true,
+                      confirmText: t('common.delete'),
+                    });
+                    if (ok) deleteMut.mutate(p.id);
                   }}
                   className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-destructive hover:bg-destructive/10"
                   aria-label={t('chat.delete')}

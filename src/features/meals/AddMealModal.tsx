@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, ChevronDown, Image as ImageIcon, Loader2, Plus, Sparkles, Trash2, X } from 'lucide-react';
-import { listFoods, type Food } from '@/features/foods/foods.api';
+import { toast } from 'sonner';
+import { BookmarkPlus, Camera, ChevronDown, Image as ImageIcon, Loader2, Plus, Sparkles, Trash2, X } from 'lucide-react';
+import { createFood, listFoods, type Food } from '@/features/foods/foods.api';
 import { estimateNutrition } from '@/features/ai/ai.api';
 import { FoodPicker } from './FoodPicker';
 import {
@@ -45,8 +46,8 @@ const emptyItem = (): DraftItem => ({
   uid: newId(),
   customName: '',
   qty: '1',
-  gramsPerUnit: '0',
-  grams: '0',
+  gramsPerUnit: '100',
+  grams: '100',
   kcal: '',
   protein: '',
   carbs: '',
@@ -77,10 +78,12 @@ function num(v: string): number {
 }
 
 function effectiveGrams(it: DraftItem): number {
-  if (it.food) {
+  // Si hay food asociado, qty * g/unidad. Si no y el usuario configuró g/unidad,
+  // también. Si gpu = 0, fallback al campo grams (modo manual puro).
+  const gpu = num(it.gramsPerUnit);
+  if (gpu > 0) {
     const q = num(it.qty);
-    const g = num(it.gramsPerUnit);
-    return Math.round(q * g * 10) / 10;
+    return Math.round(q * gpu * 10) / 10;
   }
   return num(it.grams);
 }
@@ -116,6 +119,9 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [existingPhotoUrl, setExistingPhotoUrl] = useState<string | undefined>(meal?.photoUrl);
+  // Flag explícito: solo borramos la foto del meal si el usuario tocó el botón ×.
+  // Esto evita que cualquier reset accidental de existingPhotoUrl borre la foto.
+  const [photoExplicitlyRemoved, setPhotoExplicitlyRemoved] = useState(false);
   const [aiBusy, setAiBusy] = useState<string | null>(null);
   const previewPhoto = useMemo(
     () => (photoFile ? URL.createObjectURL(photoFile) : existingPhotoUrl),
@@ -252,7 +258,7 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
         } catch (e) {
           setError(e instanceof Error ? e.message : 'Photo upload failed');
         }
-      } else if (isEdit && !existingPhotoUrl && meal?.photoUrl) {
+      } else if (isEdit && photoExplicitlyRemoved && meal?.photoUrl) {
         try {
           await removeMealPhoto(result._id);
         } catch {
@@ -264,9 +270,53 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['meals', date] });
       qc.invalidateQueries({ queryKey: ['summary', date] });
+      toast.success(t('common.saved'));
       onClose();
     },
-    onError: (e) => setError(e instanceof Error ? e.message : 'Error'),
+    onError: (e) => {
+      const msg = e instanceof Error ? e.message : t('common.errorGeneric');
+      setError(msg);
+      toast.error(msg);
+    },
+  });
+
+  const saveAsFood = useMutation({
+    mutationFn: async (uid: string) => {
+      const it = items.find((i) => i.uid === uid);
+      if (!it) throw new Error('Item not found');
+      const name = it.customName.trim();
+      if (!name) throw new Error(t('meals.errors.noName') ?? 'Add a name first');
+      const grams = effectiveGrams(it) || 100;
+      // nutritionPer100 viene de los macros / grams * 100
+      const factor = grams > 0 ? 100 / grams : 1;
+      const np = {
+        kcal: Math.round(num(it.kcal) * factor),
+        protein: Math.round(num(it.protein) * factor * 10) / 10,
+        carbs: Math.round(num(it.carbs) * factor * 10) / 10,
+        fat: Math.round(num(it.fat) * factor * 10) / 10,
+      };
+      const food = await createFood({
+        name,
+        defaultPortionG: Math.round(grams),
+        nutritionPer100: np,
+      });
+      // Vincular el item al food reci\u00e9n creado para futuros c\u00e1lculos.
+      updateItem(uid, {
+        food,
+        customName: food.name,
+        qty: '1',
+        gramsPerUnit: String(food.defaultPortionG || Math.round(grams)),
+        grams: String(food.defaultPortionG || Math.round(grams)),
+      });
+      return food;
+    },
+    onSuccess: (food) => {
+      qc.invalidateQueries({ queryKey: ['foods'] });
+      toast.success(t('meals.savedAsFood', { name: food.name }) ?? `\u201c${food.name}\u201d guardado`);
+    },
+    onError: (e) => {
+      toast.error(e instanceof Error ? e.message : t('common.errorGeneric'));
+    },
   });
 
   const canSubmit = items.some((it) => it.food || it.customName.trim());
@@ -274,7 +324,12 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4"
-      onClick={onClose}
+      onClick={(e) => {
+        // Solo cerrar si el click es directamente en el backdrop, no en hijos.
+        // Evita cierre accidental por eventos sintéticos que llegan tras cerrar
+        // el file picker / cámara nativa en móviles.
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <motion.div
         initial={{ y: 60, opacity: 0 }}
@@ -327,7 +382,10 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
               className="hidden"
               onChange={(e) => {
                 const f = e.target.files?.[0];
-                if (f) setPhotoFile(f);
+                if (f) {
+                  setPhotoFile(f);
+                  setPhotoExplicitlyRemoved(false);
+                }
               }}
             />
             {previewPhoto ? (
@@ -338,6 +396,7 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
                   onClick={() => {
                     setPhotoFile(null);
                     setExistingPhotoUrl(undefined);
+                    setPhotoExplicitlyRemoved(true);
                     if (fileRef.current) fileRef.current.value = '';
                   }}
                   className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-destructive text-xs text-white"
@@ -461,14 +520,25 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
                     />
                   )}
 
-                  <div className="grid grid-cols-5 gap-1.5">
-                    {!it.food && (
+                  {!it.food && (
+                    <div className="mb-2 grid grid-cols-[1fr,1fr,auto] items-end gap-2">
                       <NumField
-                        label="g"
-                        value={it.grams}
-                        onChange={(v) => updateItem(it.uid, { grams: v })}
+                        label={t('meals.qty') ?? 'Cantidad'}
+                        value={it.qty}
+                        onChange={(v) => updateItem(it.uid, { qty: v })}
                       />
-                    )}
+                      <NumField
+                        label={t('meals.gramsPerUnit') ?? 'g / unidad'}
+                        value={it.gramsPerUnit}
+                        onChange={(v) => updateItem(it.uid, { gramsPerUnit: v })}
+                      />
+                      <div className="flex h-10 items-center rounded-lg bg-muted px-3 text-xs font-semibold tabular-nums">
+                        = {Math.round(totalG)}g
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-4 gap-1.5">
                     <NumField
                       label="kcal"
                       value={it.food ? String(m.kcal) : it.kcal}
@@ -560,6 +630,22 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
                         )}
                         {t('meals.ai.fromName') ?? 'IA desde nombre'}
                       </button>
+                      {it.customName.trim() && num(it.kcal) > 0 && (
+                        <button
+                          type="button"
+                          disabled={saveAsFood.isPending}
+                          onClick={() => saveAsFood.mutate(it.uid)}
+                          className="inline-flex h-8 items-center gap-1 rounded-full border border-border px-2.5 text-[11px] font-medium text-foreground hover:bg-muted disabled:opacity-50"
+                          title={t('meals.saveAsFood') ?? 'Guardar en mi catálogo'}
+                        >
+                          {saveAsFood.isPending && saveAsFood.variables === it.uid ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <BookmarkPlus className="h-3 w-3" />
+                          )}
+                          {t('meals.saveAsFood') ?? 'Guardar en mi catálogo'}
+                        </button>
+                      )}
                     </div>
                   )}
                 </motion.div>
@@ -587,31 +673,31 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
             {save.isPending ? '…' : isEdit ? t('meals.saveEdit') : t('meals.confirm')}
           </button>
         </footer>
+
+        <input
+          ref={entryFileRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f && entryPhotoForUid) {
+              updateItem(entryPhotoForUid, { entryPhoto: f, entryPhotoUrl: undefined });
+            }
+            setEntryPhotoForUid(null);
+            if (entryFileRef.current) entryFileRef.current.value = '';
+          }}
+        />
+
+        <FoodPicker
+          open={pickerForUid !== null}
+          onClose={() => setPickerForUid(null)}
+          onSelect={(f) => {
+            if (pickerForUid) selectFood(pickerForUid, f);
+          }}
+        />
       </motion.div>
-
-      <input
-        ref={entryFileRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f && entryPhotoForUid) {
-            updateItem(entryPhotoForUid, { entryPhoto: f, entryPhotoUrl: undefined });
-          }
-          setEntryPhotoForUid(null);
-          if (entryFileRef.current) entryFileRef.current.value = '';
-        }}
-      />
-
-      <FoodPicker
-        open={pickerForUid !== null}
-        onClose={() => setPickerForUid(null)}
-        onSelect={(f) => {
-          if (pickerForUid) selectFood(pickerForUid, f);
-        }}
-      />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 import {
   Bookmark,
   CalendarDays,
@@ -66,6 +67,7 @@ export function ChatPage() {
   const isAdmin = user?.role === 'admin';
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const [params, setParams] = useSearchParams();
 
   const dateParam = params.get('date');
@@ -347,8 +349,14 @@ export function ChatPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (window.confirm(t('chat.deleteConfirm'))) deleteMut.mutate(h.id);
+                    onClick={async () => {
+                      const ok = await confirm({
+                        title: t('common.deleteConfirmTitle'),
+                        description: t('chat.deleteConfirm'),
+                        destructive: true,
+                        confirmText: t('common.delete'),
+                      });
+                      if (ok) deleteMut.mutate(h.id);
                     }}
                     className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full text-destructive hover:bg-destructive/10"
                     aria-label={t('chat.delete')}
@@ -726,8 +734,14 @@ export function ChatPage() {
                   ) : null}
                   <button
                     type="button"
-                    onClick={() => {
-                      if (window.confirm(t('chat.deleteConfirm'))) deleteMut.mutate(h.id);
+                    onClick={async () => {
+                      const ok = await confirm({
+                        title: t('common.deleteConfirmTitle'),
+                        description: t('chat.deleteConfirm'),
+                        destructive: true,
+                        confirmText: t('common.delete'),
+                      });
+                      if (ok) deleteMut.mutate(h.id);
                     }}
                     className="grid h-8 w-8 place-items-center rounded-full text-destructive hover:bg-destructive/10"
                     aria-label={t('chat.delete')}

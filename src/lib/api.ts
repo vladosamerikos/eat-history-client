@@ -5,20 +5,42 @@ type Options = RequestInit & { json?: unknown; auth?: boolean };
 
 let refreshPromise: Promise<string | null> | null = null;
 
+// Hace el POST /auth/refresh real. Solo se llama dentro del lock.
+async function doRefreshOnce(): Promise<string | null> {
+  try {
+    const res = await fetch(`${env.apiBaseUrl}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { accessToken: string };
+    useAuthStore.getState().setAccessToken(data.accessToken);
+    return data.accessToken;
+  } catch {
+    return null;
+  }
+}
+
+// Cross-tab singleflight: si el navegador soporta Web Locks API, serializamos
+// el refresh entre pestañas. Si dentro del lock detectamos que ya hay un
+// access token reciente (otra pestaña terminó antes), lo reutilizamos sin
+// volver a llamar al backend (evita el race que disparaba "reuse detected").
 async function attemptRefresh(): Promise<string | null> {
   if (refreshPromise) return refreshPromise;
+  const tokenBefore = useAuthStore.getState().accessToken;
   refreshPromise = (async () => {
     try {
-      const res = await fetch(`${env.apiBaseUrl}/auth/refresh`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-      if (!res.ok) return null;
-      const data = (await res.json()) as { accessToken: string };
-      useAuthStore.getState().setAccessToken(data.accessToken);
-      return data.accessToken;
-    } catch {
-      return null;
+      const locks = (typeof navigator !== 'undefined' ? navigator.locks : undefined) as
+        | LockManager
+        | undefined;
+      if (locks && typeof locks.request === 'function') {
+        return await locks.request('eh-auth-refresh', async () => {
+          const current = useAuthStore.getState().accessToken;
+          if (current && current !== tokenBefore) return current;
+          return doRefreshOnce();
+        });
+      }
+      return await doRefreshOnce();
     } finally {
       refreshPromise = null;
     }

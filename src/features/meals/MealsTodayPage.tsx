@@ -25,8 +25,11 @@ import {
   type Meal,
   type MealType,
 } from './meals.api';
+import { listFoods, type Food } from '@/features/foods/foods.api';
 import { AddMealModal } from './AddMealModal';
 import { PhotoViewer } from '@/components/ui/PhotoViewer';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { toast } from 'sonner';
 
 // IMPORTANTE: aritmética en UTC para evitar el bug de TZ.
 // `new Date('YYYY-MM-DDT00:00:00')` se parsea como hora local, pero
@@ -116,6 +119,7 @@ export function MealsTodayPage() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const [date, setDate] = useState(todayISO());
   const [adding, setAdding] = useState<MealType | null>(null);
   const [editing, setEditing] = useState<Meal | null>(null);
@@ -125,6 +129,17 @@ export function MealsTodayPage() {
     queryKey: ['meals', date],
     queryFn: () => listMeals(date),
   });
+  // Catálogo en caché para resolver imageUrl de cada entry sin pegar al BE.
+  const foodsQ = useQuery<Food[]>({
+    queryKey: ['foods'],
+    queryFn: () => listFoods(),
+    staleTime: 60_000,
+  });
+  const foodById = useMemo(() => {
+    const m = new Map<string, Food>();
+    (foodsQ.data ?? []).forEach((f) => m.set(f._id, f));
+    return m;
+  }, [foodsQ.data]);
   const summary = useQuery<DailySummary>({
     queryKey: ['summary', date],
     queryFn: () => dailySummary(date),
@@ -135,6 +150,10 @@ export function MealsTodayPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['meals', date] });
       qc.invalidateQueries({ queryKey: ['summary', date] });
+      toast.success(t('common.saved'));
+    },
+    onError: (e) => {
+      toast.error(e instanceof Error ? e.message : t('common.errorGeneric'));
     },
   });
 
@@ -359,7 +378,19 @@ export function MealsTodayPage() {
                       </p>
                     ) : (
                       <ul className="grid gap-1.5 px-2 pb-2">
-                        {items.map((m) => (
+                        {items.map((m) => {
+                          // Preview: prioridad foto del meal > foto del Food si solo 1 entry > mosaico de Foods.
+                          const entryFoods = m.entries
+                            .map((e) => (e.foodId ? foodById.get(String(e.foodId)) : null))
+                            .filter(Boolean) as Food[];
+                          const singleFoodImage =
+                            !m.photoUrl && m.entries.length === 1 && entryFoods[0]?.imageUrl
+                              ? entryFoods[0].imageUrl
+                              : null;
+                          const mosaicFoods = !m.photoUrl && !singleFoodImage
+                            ? entryFoods.filter((f) => f?.imageUrl).slice(0, 4)
+                            : [];
+                          return (
                           <li
                             key={m._id}
                             className="flex items-center gap-2 rounded-xl bg-muted/50 p-2"
@@ -372,6 +403,29 @@ export function MealsTodayPage() {
                                 onClick={() => setViewingPhoto(m.photoUrl ?? null)}
                                 className="h-12 w-12 flex-shrink-0 cursor-zoom-in rounded-lg object-cover transition-transform active:scale-95"
                               />
+                            ) : singleFoodImage ? (
+                              <img
+                                src={singleFoodImage}
+                                alt=""
+                                loading="lazy"
+                                onClick={() => setViewingPhoto(singleFoodImage)}
+                                className="h-12 w-12 flex-shrink-0 cursor-zoom-in rounded-lg object-cover transition-transform active:scale-95"
+                              />
+                            ) : mosaicFoods.length > 1 ? (
+                              <div className="grid h-12 w-12 flex-shrink-0 grid-cols-2 grid-rows-2 gap-px overflow-hidden rounded-lg bg-background">
+                                {mosaicFoods.slice(0, 4).map((f, i) => (
+                                  <img
+                                    key={(f._id || '') + i}
+                                    src={f.imageUrl!}
+                                    alt=""
+                                    loading="lazy"
+                                    className="h-full w-full object-cover"
+                                  />
+                                ))}
+                                {Array.from({ length: Math.max(0, 4 - mosaicFoods.length) }).map((_, i) => (
+                                  <span key={`pad-${i}`} className="bg-muted" />
+                                ))}
+                              </div>
                             ) : (
                               <span className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-lg bg-background text-muted-foreground">
                                 <UtensilsCrossed className="h-4 w-4" />
@@ -386,8 +440,11 @@ export function MealsTodayPage() {
                               </p>
                               <p className="break-words text-[11px] leading-tight text-muted-foreground">
                                 {m.entries
-                                  .map((e) => e.customName ?? `Food (${e.grams}g)`)
-                                  .join(' · ')}
+                                  .map((e) => {
+                                    const f = e.foodId ? foodById.get(String(e.foodId)) : null;
+                                    return e.customName ?? f?.name ?? `Food (${e.grams}g)`;
+                                  })
+                                  .join(' \u00b7 ')}
                               </p>
                             </div>
                             <div className="flex flex-shrink-0 items-center gap-1">
@@ -401,7 +458,15 @@ export function MealsTodayPage() {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => del.mutate(m._id)}
+                                onClick={async () => {
+                                  const ok = await confirm({
+                                    title: t('common.deleteConfirmTitle'),
+                                    description: t('meals.deleteConfirm'),
+                                    destructive: true,
+                                    confirmText: t('common.delete'),
+                                  });
+                                  if (ok) del.mutate(m._id);
+                                }}
                                 className="grid h-8 w-8 place-items-center rounded-full text-destructive hover:bg-destructive/10"
                                 aria-label={t('meals.remove')}
                               >
@@ -409,7 +474,8 @@ export function MealsTodayPage() {
                               </button>
                             </div>
                           </li>
-                        ))}
+                          );
+                        })}
                       </ul>
                     )}
                   </section>

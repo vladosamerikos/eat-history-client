@@ -13,6 +13,7 @@ import { listSessions, revokeSession, type SessionInfo } from '../profile.api';
 import { env } from '@/config/env';
 import { PageHeader, Section } from './_shared';
 import { Alert } from '@/components/ui/Alert';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 type Msg = { kind: 'success' | 'error' | 'info'; text: string } | null;
 
@@ -29,6 +30,7 @@ function deviceLabel(ua?: string): string {
 export function SecurityPage() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
+  const confirm = useConfirm();
 
   const [passkeys, setPasskeys] = useState<PasskeyInfo[]>([]);
   const [pkLoading, setPkLoading] = useState(false);
@@ -78,7 +80,13 @@ export function SecurityPage() {
   };
 
   const onDeletePasskey = async (id: string) => {
-    if (!window.confirm(t('settings.passkeys.confirmDelete'))) return;
+    const ok = await confirm({
+      title: t('common.deleteConfirmTitle'),
+      description: t('settings.passkeys.confirmDelete'),
+      destructive: true,
+      confirmText: t('common.delete'),
+    });
+    if (!ok) return;
     setPkMsg(null);
     try {
       await deletePasskey(id);
@@ -89,7 +97,13 @@ export function SecurityPage() {
   };
 
   const onRevoke = async (id: string) => {
-    if (!window.confirm(t('settings.sessions.confirmRevoke'))) return;
+    const ok = await confirm({
+      title: t('common.deleteConfirmTitle'),
+      description: t('settings.sessions.confirmRevoke'),
+      destructive: true,
+      confirmText: t('common.delete'),
+    });
+    if (!ok) return;
     setSessMsg(null);
     try {
       await revokeSession(id);

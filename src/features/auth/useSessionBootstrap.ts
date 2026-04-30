@@ -15,14 +15,26 @@ export function useSessionBootstrap(): { ready: boolean } {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
+      const doRefresh = async (): Promise<string | null> => {
         const res = await fetch(`${env.apiBaseUrl}/auth/refresh`, {
           method: 'POST',
           credentials: 'include',
         });
-        if (res.ok) {
-          const { accessToken } = (await res.json()) as { accessToken: string };
-          if (cancelled) return;
+        if (!res.ok) return null;
+        const { accessToken } = (await res.json()) as { accessToken: string };
+        return accessToken;
+      };
+      try {
+        // Cross-tab singleflight: si el navegador soporta Web Locks, serializamos
+        // los refresh concurrentes entre pestañas para no disparar reuse-detection.
+        const locks = (typeof navigator !== 'undefined' ? navigator.locks : undefined) as
+          | LockManager
+          | undefined;
+        const accessToken = locks && typeof locks.request === 'function'
+          ? await locks.request('eh-auth-refresh', () => doRefresh())
+          : await doRefresh();
+        if (cancelled) return;
+        if (accessToken) {
           setAccessToken(accessToken);
           const user = await fetchMe();
           if (!cancelled) setUser(user);

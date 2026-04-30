@@ -1,5 +1,5 @@
 {
-  "common": { "cancel": "Cancelar", "save": "Guardar", "close": "Cerrar", "back": "Volver", "loading": "Cargando…", "empty": "Sin resultados.", "remove": "Quitar" },
+  "common": { "cancel": "Cancelar", "save": "Guardar", "close": "Cerrar", "back": "Volver", "loading": "Cargando…", "empty": "Sin resultados.", "remove": "Quitar", "edit": "Editar", "notes": "Notas", "confirm": "Confirmar", "delete": "Eliminar", "deleteConfirmTitle": "¿Eliminar?", "deleteConfirmDesc": "Esta acción no se puede deshacer.", "saved": "Guardado", "errorGeneric": "Algo falló. Inténtalo de nuevo." },
   "welcome": {
     "greeting": "Bienvenido",
     "tagline": "Tu nutrición, tu historia.",
@@ -158,7 +158,7 @@
     "goals": { "lose": "Perder peso", "maintain": "Mantenerme", "gain": "Ganar masa", "health": "Comer mejor" },
     "diets": { "omnivore": "Omnívoro", "vegetarian": "Vegetariano", "vegan": "Vegano", "pescatarian": "Pescetariano", "keto": "Keto" }
   },
-  "nav": { "today": "Hoy", "foods": "Comidas", "chat": "Chat", "profile": "Perfil", "settings": "Ajustes" },
+  "nav": { "today": "Hoy", "foods": "Comidas", "weight": "Peso", "chat": "Chat", "profile": "Perfil", "settings": "Ajustes" },
   "chat": {
     "title": "Chat con IA",
     "placeholder": "Escribe un mensaje…",
@@ -314,7 +314,10 @@
     "picker": { "title": "Elegir comida", "search": "Buscar comida…" },
     "entryPhoto": { "add": "Foto del producto", "change": "Cambiar foto" },
     "ai": { "fromPhoto": "IA desde foto", "fromName": "IA desde nombre", "needsPhoto": "Añade una foto primero", "needsName": "Escribe el nombre primero" },
-    "errors": { "noEntries": "Añade al menos un producto." }
+    "errors": { "noEntries": "Añade al menos un producto.", "noName": "Añade un nombre primero." },
+    "saveAsFood": "Guardar en mi catálogo",
+    "savedAsFood": "“{{name}}” guardado en tu catálogo",
+    "deleteConfirm": "¿Eliminar esta comida?"
   },
   "foods": {
     "title": "Mis comidas",
@@ -341,6 +344,42 @@
       "taskVision": "Visión (foto)",
       "taskText": "Texto (nombre)",
       "available": "Disponibles"
+    }
+  },
+  "weight": {
+    "title": "Peso",
+    "subtitle": "Sigue tu evolución y composición corporal.",
+    "add": "Registrar",
+    "addTitle": "Nuevo registro de peso",
+    "editTitle": "Editar registro",
+    "latest": "Último",
+    "empty": "Aún no has registrado tu peso.",
+    "date": "Fecha",
+    "time": "Hora",
+    "kg": "Peso (kg)",
+    "bodyComp": "Composición corporal (opcional)",
+    "bodyFat": "Grasa",
+    "muscle": "Músculo",
+    "water": "Agua",
+    "bone": "Hueso",
+    "visceralFat": "Visceral",
+    "fat": "grasa",
+    "photo": "Foto de la báscula",
+    "photoHint": "Adjunta la lectura para tener evidencia.",
+    "deleteConfirm": "¿Eliminar este registro de peso?",
+    "deltaInRange": "Variación en {{days}} días",
+    "errors": { "kgRequired": "Indica un peso válido." },
+    "ble": {
+      "title": "Báscula Bluetooth",
+      "connect": "Conectar",
+      "disconnect": "Desconectar",
+      "idle": "Conecta tu Mi Body Composition Scale.",
+      "requesting": "Selecciona la báscula…",
+      "connecting": "Conectando…",
+      "reading": "Leyendo… {{kg}} kg",
+      "standOnScale": "Súbete a la báscula…",
+      "stable": "Listo: {{kg}} kg",
+      "captured": "Peso capturado: {{kg}} kg"
     }
   }
 }

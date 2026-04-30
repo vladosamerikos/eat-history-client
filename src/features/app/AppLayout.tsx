@@ -1,13 +1,13 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { CalendarDays, ListChecks, MessageCircle, User } from 'lucide-react';
+import { CalendarDays, ListChecks, Scale, User } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 const tabs: ReadonlyArray<{ to: string; key: string; exact?: boolean; Icon: LucideIcon }> = [
   { to: '/app', key: 'today', exact: true, Icon: CalendarDays },
   { to: '/app/foods', key: 'foods', Icon: ListChecks },
-  { to: '/app/chat', key: 'chat', Icon: MessageCircle },
+  { to: '/app/weight', key: 'weight', Icon: Scale },
   { to: '/app/profile', key: 'profile', Icon: User },
 ];
 

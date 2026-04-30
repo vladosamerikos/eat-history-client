@@ -1,5 +1,5 @@
 {
-  "common": { "cancel": "Cancel", "save": "Save", "close": "Close", "back": "Back", "loading": "Loading…", "empty": "No results.", "remove": "Remove" },
+  "common": { "cancel": "Cancel", "save": "Save", "close": "Close", "back": "Back", "loading": "Loading…", "empty": "No results.", "remove": "Remove", "edit": "Edit", "notes": "Notes", "confirm": "Confirm", "delete": "Delete", "deleteConfirmTitle": "Delete?", "deleteConfirmDesc": "This action cannot be undone.", "saved": "Saved", "errorGeneric": "Something went wrong. Please try again." },
   "welcome": {
     "greeting": "Welcome",
     "tagline": "Your nutrition, your story.",
@@ -157,7 +157,7 @@
     "goals": { "lose": "Lose weight", "maintain": "Maintain", "gain": "Gain muscle", "health": "Eat healthier" },
     "diets": { "omnivore": "Omnivore", "vegetarian": "Vegetarian", "vegan": "Vegan", "pescatarian": "Pescatarian", "keto": "Keto" }
   },
-  "nav": { "today": "Today", "foods": "Foods", "chat": "Chat", "profile": "Profile", "settings": "Settings" },
+  "nav": { "today": "Today", "foods": "Foods", "weight": "Weight", "chat": "Chat", "profile": "Profile", "settings": "Settings" },
   "chat": {
     "title": "AI chat",
     "placeholder": "Write a message…",
@@ -313,7 +313,10 @@
     "picker": { "title": "Pick a food", "search": "Search food…" },
     "entryPhoto": { "add": "Item photo", "change": "Change photo" },
     "ai": { "fromPhoto": "AI from photo", "fromName": "AI from name", "needsPhoto": "Add a photo first", "needsName": "Type the name first" },
-    "errors": { "noEntries": "Add at least one item." }
+    "errors": { "noEntries": "Add at least one item.", "noName": "Add a name first." },
+    "saveAsFood": "Save to my catalog",
+    "savedAsFood": "“{{name}}” saved to your catalog",
+    "deleteConfirm": "Delete this meal?"
   },
   "foods": {
     "title": "My foods",
@@ -340,6 +343,42 @@
       "taskVision": "Vision (photo)",
       "taskText": "Text (name)",
       "available": "Available"
+    }
+  },
+  "weight": {
+    "title": "Weight",
+    "subtitle": "Track your trend and body composition.",
+    "add": "Log",
+    "addTitle": "New weight entry",
+    "editTitle": "Edit entry",
+    "latest": "Latest",
+    "empty": "You haven't logged any weight yet.",
+    "date": "Date",
+    "time": "Time",
+    "kg": "Weight (kg)",
+    "bodyComp": "Body composition (optional)",
+    "bodyFat": "Fat",
+    "muscle": "Muscle",
+    "water": "Water",
+    "bone": "Bone",
+    "visceralFat": "Visceral",
+    "fat": "fat",
+    "photo": "Scale photo",
+    "photoHint": "Attach the reading as proof.",
+    "deleteConfirm": "Delete this weight entry?",
+    "deltaInRange": "Change over {{days}} days",
+    "errors": { "kgRequired": "Enter a valid weight." },
+    "ble": {
+      "title": "Bluetooth scale",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "idle": "Connect your Mi Body Composition Scale.",
+      "requesting": "Pick the scale…",
+      "connecting": "Connecting…",
+      "reading": "Reading… {{kg}} kg",
+      "standOnScale": "Step on the scale…",
+      "stable": "Ready: {{kg}} kg",
+      "captured": "Weight captured: {{kg}} kg"
     }
   }
 }

@@ -13,6 +13,7 @@ import {
 } from './foods.api';
 import { estimateNutrition } from '@/features/ai/ai.api';
 import { Alert } from '@/components/ui/Alert';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 interface FormState {
   name: string;
@@ -46,6 +47,7 @@ function fromFood(f: Food): FormState {
 export function FoodsPage() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const [q, setQ] = useState('');
   const [form, setForm] = useState<FormState>(emptyForm);
   const [showForm, setShowForm] = useState(false);
@@ -320,10 +322,14 @@ export function FoodsPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (window.confirm(t('foods.deleteConfirm', { defaultValue: t('foods.delete') + '?' }))) {
-                        deleteMut.mutate(f._id);
-                      }
+                    onClick={async () => {
+                      const ok = await confirm({
+                        title: t('common.deleteConfirmTitle'),
+                        description: t('foods.deleteConfirm', { defaultValue: t('common.deleteConfirmDesc') }),
+                        destructive: true,
+                        confirmText: t('common.delete'),
+                      });
+                      if (ok) deleteMut.mutate(f._id);
                     }}
                     className="grid h-8 w-8 place-items-center rounded-full text-destructive hover:bg-destructive/10"
                     aria-label={t('foods.delete')}

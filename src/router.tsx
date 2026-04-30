@@ -17,6 +17,7 @@ import { SecurityPage } from '@/features/app/profile/SecurityPage';
 import { PrivacySectionPage } from '@/features/app/profile/PrivacySectionPage';
 import { MealsTodayPage } from '@/features/meals/MealsTodayPage';
 import { FoodsPage } from '@/features/foods/FoodsPage';
+import { WeightPage } from '@/features/weights/WeightPage';
 import { ChatPage } from '@/features/chat/ChatPage';
 import { OnboardingPage } from '@/features/onboarding/OnboardingPage';
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
@@ -51,6 +52,7 @@ export function AppRouter() {
       >
         <Route index element={<MealsTodayPage />} />
         <Route path="foods" element={<FoodsPage />} />
+        <Route path="weight" element={<WeightPage />} />
         <Route path="chat" element={<ChatPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="profile/settings" element={<GeneralSettingsPage />} />
