@@ -252,6 +252,9 @@ export function AddWeightModal({ open, onClose, weight, defaultDate }: AddWeight
                             ? t('weight.ble.reading', { kg: ble.lastMeasurement.kg.toFixed(2) })
                             : t('weight.ble.standOnScale')
                         )}
+                        {ble.status === 'stable' && ble.lastMeasurement && (
+                          t('weight.ble.stable', { kg: ble.lastMeasurement.kg.toFixed(2) })
+                        )}
                         {ble.status === 'connected' && ble.lastMeasurement && (
                           t('weight.ble.stable', { kg: ble.lastMeasurement.kg.toFixed(2) })
                         )}
@@ -259,13 +262,14 @@ export function AddWeightModal({ open, onClose, weight, defaultDate }: AddWeight
                       </p>
                     </div>
                   </div>
-                  {ble.status === 'idle' || ble.status === 'error' ? (
+                  {ble.status === 'idle' || ble.status === 'error' || ble.status === 'stable' ? (
                     <button
                       type="button"
                       onClick={() => ble.connect()}
                       className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-xs font-semibold hover:bg-muted"
                     >
-                      <Bluetooth className="h-3.5 w-3.5" /> {t('weight.ble.connect')}
+                      <Bluetooth className="h-3.5 w-3.5" />{' '}
+                      {ble.status === 'stable' ? t('weight.ble.remeasure') : t('weight.ble.connect')}
                     </button>
                   ) : (
                     <button

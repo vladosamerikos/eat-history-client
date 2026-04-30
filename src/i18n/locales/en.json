@@ -378,7 +378,8 @@
       "reading": "Reading… {{kg}} kg",
       "standOnScale": "Step on the scale…",
       "stable": "Ready: {{kg}} kg",
-      "captured": "Weight captured: {{kg}} kg"
+      "captured": "Weight captured: {{kg}} kg",
+      "remeasure": "Measure again"
     }
   }
 }

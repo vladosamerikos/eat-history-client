@@ -379,7 +379,8 @@
       "reading": "Leyendo… {{kg}} kg",
       "standOnScale": "Súbete a la báscula…",
       "stable": "Listo: {{kg}} kg",
-      "captured": "Peso capturado: {{kg}} kg"
+      "captured": "Peso capturado: {{kg}} kg",
+      "remeasure": "Volver a medir"
     }
   }
 }

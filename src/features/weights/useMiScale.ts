@@ -10,7 +10,7 @@ const BODY_COMPOSITION_MEASUREMENT = 0x2a9c;
 const WEIGHT_SCALE_SERVICE = 0x181d;
 const WEIGHT_MEASUREMENT = 0x2a9d;
 
-export type MiScaleStatus = 'idle' | 'requesting' | 'connecting' | 'connected' | 'reading' | 'error';
+export type MiScaleStatus = 'idle' | 'requesting' | 'connecting' | 'connected' | 'reading' | 'stable' | 'error';
 
 export interface UseMiScaleOptions {
   onMeasurement?: (m: MiScaleMeasurement) => void;
@@ -78,6 +78,16 @@ export function useMiScale(opts: UseMiScaleOptions = {}): UseMiScaleResult {
     onStableRef.current = opts.onStable;
   }, [opts.onMeasurement, opts.onStable]);
 
+  // Buffer de medidas recientes para detectar estabilización por heurística
+  // (varias lecturas seguidas con el mismo peso ≈ usuario quieto).
+  const recentRef = useRef<number[]>([]);
+  // Una vez emitida una medida estable, no volvemos a disparar onStable
+  // hasta que el usuario reconecte (evita oscilaciones / re-pisado).
+  const stableEmittedRef = useRef(false);
+  // Guardamos los callbacks de cleanup en un ref para usarlos sin
+  // crear ciclos de dependencias entre handleNotification y cleanup.
+  const cleanupRef = useRef<() => void>(() => {});
+
   const cleanup = useCallback(() => {
     if (charRef.current) {
       try {
@@ -96,10 +106,11 @@ export function useMiScale(opts: UseMiScaleOptions = {}): UseMiScaleResult {
       }
       deviceRef.current = null;
     }
+    recentRef.current = [];
   }, []);
 
   const handleDisconnect = useCallback(() => {
-    setStatus('idle');
+    setStatus((prev) => (prev === 'stable' ? prev : 'idle'));
     setDeviceName(null);
     cleanup();
   }, [cleanup]);
@@ -116,12 +127,44 @@ export function useMiScale(opts: UseMiScaleOptions = {}): UseMiScaleResult {
         : parseWeightScale(dv);
     if (!m) return;
     setLastMeasurement(m);
-    setStatus(m.stabilized ? 'connected' : 'reading');
     onMeasurementRef.current?.(m);
-    if (m.stabilized && !m.removed && m.kg > 0) {
+
+    // Si ya emitimos una medida estable, ignoramos lo siguiente (la báscula
+    // suele seguir enviando paquetes de "removed" o similares).
+    if (stableEmittedRef.current) return;
+
+    // No nos interesa el peso 0 / persona aún subiendo / báscula vacía.
+    if (m.removed || m.kg <= 5) {
+      recentRef.current = [];
+      setStatus('reading');
+      return;
+    }
+
+    // Heurística: 4 lecturas seguidas con diferencia < 0.1 kg = estable.
+    // (la báscula manda ~10 paquetes/seg). Combinamos con el bit "stabilized"
+    // del parser cuando esté disponible.
+    const buf = recentRef.current;
+    buf.push(m.kg);
+    if (buf.length > 5) buf.shift();
+    const heuristicStable =
+      buf.length >= 4 && Math.max(...buf) - Math.min(...buf) < 0.1;
+
+    if (m.stabilized || heuristicStable) {
+      stableEmittedRef.current = true;
+      setStatus('stable');
       onStableRef.current?.(m);
+      // Paramos la báscula: ya tenemos el peso, no queremos seguir leyendo.
+      cleanupRef.current();
+    } else {
+      setStatus('reading');
     }
   }, []);
+
+  // Mantener cleanupRef sincronizado para que handleNotification pueda llamarlo
+  // sin crear un ciclo de dependencias.
+  useEffect(() => {
+    cleanupRef.current = cleanup;
+  }, [cleanup]);
 
   const connect = useCallback(async () => {
     if (!supported) {
@@ -131,6 +174,9 @@ export function useMiScale(opts: UseMiScaleOptions = {}): UseMiScaleResult {
     }
     setError(null);
     setStatus('requesting');
+    stableEmittedRef.current = false;
+    recentRef.current = [];
+    setLastMeasurement(null);
     try {
       const device = await navigator.bluetooth!.requestDevice({
         filters: [
