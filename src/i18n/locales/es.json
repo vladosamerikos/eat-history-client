@@ -319,6 +319,19 @@
     "savedAsFood": "“{{name}}” guardado en tu catálogo",
     "deleteConfirm": "¿Eliminar esta comida?"
   },
+  "voice": {
+    "title": "Asistente de voz",
+    "openAria": "Abrir asistente de voz",
+    "close": "Cerrar",
+    "connecting": "Conectando…",
+    "listening": "Te escucho…",
+    "agentSpeaking": "Hablando…",
+    "ended": "Sesión finalizada",
+    "error": "Error al conectar con el asistente.",
+    "mute": "Silenciar",
+    "unmute": "Activar micrófono",
+    "end": "Finalizar"
+  },
   "foods": {
     "title": "Mis comidas",
     "add": "Añadir",

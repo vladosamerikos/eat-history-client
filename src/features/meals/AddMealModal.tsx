@@ -3,9 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { BookmarkPlus, Camera, ChevronDown, Image as ImageIcon, Loader2, Plus, Sparkles, Trash2, X } from 'lucide-react';
+import { BookmarkPlus, Camera, ChevronDown, Image as ImageIcon, Loader2, Mic, Plus, Sparkles, Trash2, X } from 'lucide-react';
 import { createFood, listFoods, type Food } from '@/features/foods/foods.api';
 import { estimateNutrition } from '@/features/ai/ai.api';
+import { VoiceDrawer } from '@/features/voice/VoiceDrawer';
 import { FoodPicker } from './FoodPicker';
 import {
   createMeal,
@@ -123,6 +124,7 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
   // Esto evita que cualquier reset accidental de existingPhotoUrl borre la foto.
   const [photoExplicitlyRemoved, setPhotoExplicitlyRemoved] = useState(false);
   const [aiBusy, setAiBusy] = useState<string | null>(null);
+  const [voiceOpen, setVoiceOpen] = useState(false);
   const previewPhoto = useMemo(
     () => (photoFile ? URL.createObjectURL(photoFile) : existingPhotoUrl),
     [photoFile, existingPhotoUrl],
@@ -342,14 +344,25 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
           <h3 className="truncate text-base font-semibold">
             {t(`meals.types.${type}`)} · {isEdit ? t('meals.edit') : t('meals.add')}
           </h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted"
-            aria-label="Close"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setVoiceOpen(true)}
+              className="grid h-8 w-8 place-items-center rounded-full text-primary hover:bg-primary/10"
+              aria-label={t('voice.openAria')}
+              title={t('voice.openAria')}
+            >
+              <Mic className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </header>
 
         <div className="flex items-center justify-between gap-3 bg-muted/50 px-4 py-2 text-xs">
@@ -698,6 +711,15 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
           }}
         />
       </motion.div>
+
+      <VoiceDrawer
+        open={voiceOpen}
+        onClose={() => setVoiceOpen(false)}
+        onChanged={() => {
+          qc.invalidateQueries({ queryKey: ['meals'] });
+          qc.invalidateQueries({ queryKey: ['weights'] });
+        }}
+      />
     </div>
   );
 }

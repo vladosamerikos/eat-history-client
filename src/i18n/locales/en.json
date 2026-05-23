@@ -318,6 +318,19 @@
     "savedAsFood": "“{{name}}” saved to your catalog",
     "deleteConfirm": "Delete this meal?"
   },
+  "voice": {
+    "title": "Voice assistant",
+    "openAria": "Open voice assistant",
+    "close": "Close",
+    "connecting": "Connecting…",
+    "listening": "Listening…",
+    "agentSpeaking": "Speaking…",
+    "ended": "Session ended",
+    "error": "Failed to connect to the assistant.",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "end": "End"
+  },
   "foods": {
     "title": "My foods",
     "add": "Add",
