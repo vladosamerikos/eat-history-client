@@ -6,16 +6,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft,
   ChevronRight,
-  Coffee,
-  Cookie,
-  Flame,
   MessageCircle,
-  Moon,
   Pencil,
   Plus,
   Trash2,
   UtensilsCrossed,
 } from 'lucide-react';
+import { MSIcon } from '@/components/ui/MSIcon';
+import { MacroBadge, MacroInlineStat } from '@/components/ui/MacroChips';
 import {
   deleteMeal,
   listMeals,
@@ -30,7 +28,6 @@ import { listFoods, type Food } from '@/features/foods/foods.api';
 import { AddMealModal } from './AddMealModal';
 import { PhotoViewer } from '@/components/ui/PhotoViewer';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
-import { MacroBadges, MacroTiles } from '@/components/ui/MacroBadges';
 import { toast } from 'sonner';
 
 // IMPORTANTE: aritmética en UTC para evitar el bug de TZ.
@@ -53,11 +50,11 @@ function isoDiffDays(a: string, b: string): number {
   return Math.round((da - db) / 86_400_000);
 }
 
-const TYPE_ICON: Record<MealType, typeof Coffee> = {
-  breakfast: Coffee,
-  lunch: UtensilsCrossed,
-  snack: Cookie,
-  dinner: Moon,
+const TYPE_ICON: Record<MealType, string> = {
+  breakfast: 'free_breakfast',
+  lunch: 'restaurant',
+  snack: 'cookie',
+  dinner: 'dinner_dining',
 };
 
 interface DateStripProps {
@@ -99,33 +96,33 @@ function DateStrip({ selected, onSelect, locale }: DateStripProps) {
               ref={isSelected ? selectedRef : undefined}
               type="button"
               onClick={() => onSelect(d)}
-              className={`flex h-16 min-w-[3.5rem] flex-shrink-0 snap-center flex-col items-center justify-center rounded-xl text-xs transition ${
+              className={`relative flex h-16 min-w-[3.5rem] flex-shrink-0 snap-center flex-col items-center justify-center rounded-xl text-xs transition ${
                 isSelected
                   ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
+                  : isToday
+                  ? 'bg-primary/15 text-primary ring-1 ring-primary/30 hover:bg-primary/25'
                   : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
               }`}
             >
               <span className={`text-[10px] uppercase tracking-wider ${isSelected ? 'opacity-90' : ''}`}>
                 {fmtWeekday.format(dt)}
               </span>
-              <span className={`text-xl font-bold leading-none ${isSelected ? '' : 'text-on-background'}`}>
+              <span
+                className={`text-xl font-bold leading-none ${
+                  isSelected ? '' : isToday ? 'text-primary' : 'text-on-background'
+                }`}
+              >
                 {dt.getDate()}
               </span>
               {isToday && !isSelected && (
-                <span className="mt-0.5 h-1 w-1 rounded-full bg-primary" />
+                <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-primary" />
               )}
             </button>
           );
         })}
       </div>
-      <div className="h-0.5 w-full overflow-hidden rounded-full bg-surface-container">
-        <div
-          className="h-full rounded-full bg-primary transition-all"
-          style={{
-            width: `${((days.findIndex((d) => d === selected) + 1) / days.length) * 100}%`,
-          }}
-        />
-      </div>
+      {/* Separador full-width */}
+      <div className="-mx-4 h-px w-screen bg-outline-variant/30" />
     </div>
   );
 }
@@ -273,12 +270,6 @@ export function MealsTodayPage() {
     setDragX(0);
   };
 
-  const macroLabels = {
-    protein: t('meals.macros.protein') ?? 'Protein',
-    carbs: t('meals.macros.carbs') ?? 'Carbs',
-    fat: t('meals.macros.fat') ?? 'Fat',
-  };
-
   return (
     <div className="w-full overflow-x-hidden">
       <header className="mb-3 flex items-center justify-between gap-2">
@@ -295,7 +286,7 @@ export function MealsTodayPage() {
           <button
             type="button"
             onClick={() => setDate(todayISO())}
-            className="text-[11px] tabular-nums text-on-surface-variant underline-offset-2 hover:underline"
+            className="mt-0.5 inline-block rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold tabular-nums text-primary hover:bg-primary/15"
           >
             {date}
           </button>
@@ -333,21 +324,21 @@ export function MealsTodayPage() {
           >
             {/* Daily Summary */}
             <section className="my-4">
-              <div className="ai-glow glass-panel relative overflow-hidden rounded-xl p-4">
-                <div className="mb-6 flex items-end justify-between gap-3">
+              <div className="relative overflow-hidden rounded-xl border border-outline-variant bg-surface-container-low p-4">
+                <div className="mb-4 flex items-end justify-between gap-3">
                   <div>
                     <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
                       {t('meals.dailyTotal')}
                     </p>
                     <div className="flex items-center gap-3">
                       <span className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-xl bg-primary/10">
-                        <Flame className="h-7 w-7 text-primary" />
+                        <MSIcon name="local_fire_department" size={30} className="text-primary" />
                       </span>
-                      <div className="flex flex-col">
+                      <div className="flex items-baseline gap-1.5">
                         <span className="text-[40px] font-bold leading-none tabular-nums text-on-background">
                           {summary.data?.totalKcal ?? 0}
                         </span>
-                        <span className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
                           kcal
                         </span>
                       </div>
@@ -363,19 +354,30 @@ export function MealsTodayPage() {
                     <MessageCircle className="h-5 w-5" />
                   </button>
                 </div>
-                <MacroTiles
-                  protein={summary.data?.totalProtein ?? 0}
-                  carbs={summary.data?.totalCarbs ?? 0}
-                  fat={summary.data?.totalFat ?? 0}
-                  labels={macroLabels}
-                />
+                <div className="grid grid-cols-3 gap-2">
+                  <MacroBadge
+                    macro="protein"
+                    label={t('meals.macros.protein')}
+                    value={summary.data?.totalProtein ?? 0}
+                  />
+                  <MacroBadge
+                    macro="carbs"
+                    label={t('meals.macros.carbs')}
+                    value={summary.data?.totalCarbs ?? 0}
+                  />
+                  <MacroBadge
+                    macro="fat"
+                    label={t('meals.macros.fat')}
+                    value={summary.data?.totalFat ?? 0}
+                  />
+                </div>
               </div>
             </section>
 
             {/* Meal type sections */}
             <div className="grid gap-3">
               {grouped.map(({ type, items }) => {
-                const TypeIcon = TYPE_ICON[type];
+                const typeIconName = TYPE_ICON[type];
                 const sectionKcal = items.reduce((sum, m) => sum + m.totalKcal, 0);
                 return (
                   <section
@@ -385,14 +387,15 @@ export function MealsTodayPage() {
                     <header className="flex items-center justify-between gap-2 border-b border-outline-variant/40 bg-surface-container-low px-4 py-3">
                       <div className="flex min-w-0 items-center gap-3">
                         <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-surface-container-high text-primary">
-                          <TypeIcon className="h-5 w-5" />
+                          <MSIcon name={typeIconName as never} size={22} className="text-primary" />
                         </span>
                         <div className="min-w-0">
                           <h3 className="truncate text-base font-bold text-on-background">
                             {t(`meals.types.${type}`)}
                           </h3>
                           {sectionKcal > 0 && (
-                            <p className="text-[11px] font-semibold tabular-nums text-on-surface-variant">
+                            <p className="flex items-center gap-1 text-[11px] font-semibold tabular-nums text-on-surface-variant">
+                              <MSIcon name="local_fire_department" size={14} className="text-primary" />
                               {sectionKcal} kcal
                             </p>
                           )}
@@ -480,20 +483,14 @@ export function MealsTodayPage() {
                                 </span>
                               )}
                               <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-semibold text-on-background">{name}</p>
-                                <div className="mt-1">
-                                  <MacroBadges
-                                    kcal={m.totalKcal}
-                                    protein={mealTotals.protein}
-                                    carbs={mealTotals.carbs}
-                                    fat={mealTotals.fat}
-                                    labels={{
-                                      protein: t('meals.macros.proteinShort') ?? 'P',
-                                      carbs: t('meals.macros.carbsShort') ?? 'C',
-                                      fat: t('meals.macros.fatShort') ?? 'G',
-                                    }}
-                                    compact
-                                  />
+                                <p className="break-words text-sm font-semibold leading-snug text-on-background line-clamp-2">
+                                  {name}
+                                </p>
+                                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                                  <MacroInlineStat macro="kcal" value={m.totalKcal} unit="kcal" />
+                                  <MacroInlineStat macro="protein" value={mealTotals.protein} />
+                                  <MacroInlineStat macro="carbs" value={mealTotals.carbs} />
+                                  <MacroInlineStat macro="fat" value={mealTotals.fat} />
                                 </div>
                               </div>
                               <div className="flex flex-shrink-0 flex-col items-center gap-1">
@@ -552,3 +549,5 @@ export function MealsTodayPage() {
     </div>
   );
 }
+
+

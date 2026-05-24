@@ -1,5 +1,21 @@
 import { create } from 'zustand';
 
+export type WeightUnit = 'kg' | 'lb';
+export type VolumeUnit = 'ml' | 'floz';
+export type HeightUnit = 'cm' | 'ft_in';
+
+export interface UnitPreferences {
+  weight: WeightUnit;
+  volume: VolumeUnit;
+  height: HeightUnit;
+}
+
+export const DEFAULT_UNITS: UnitPreferences = {
+  weight: 'kg',
+  volume: 'ml',
+  height: 'cm',
+};
+
 export interface PublicUser {
   id: string;
   email?: string;
@@ -15,6 +31,7 @@ export interface PublicUser {
   reminderTimes?: { breakfast: string; lunch: string; snack: string; dinner: string };
   reminderTimezone?: string;
   aiModelPreferences?: { vision?: string; text?: string; chat?: string };
+  units?: UnitPreferences;
 }
 
 interface AuthState {

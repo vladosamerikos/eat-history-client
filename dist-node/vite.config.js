@@ -34,6 +34,8 @@ export default defineConfig(({ mode }) => {
                 },
                 injectManifest: {
                     globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
+                    globIgnores: ['**/material-symbols-*.woff2'],
+                    maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
                 },
                 devOptions: { enabled: true, type: 'module' },
             }),

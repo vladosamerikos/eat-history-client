@@ -1,20 +1,19 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   Camera,
-  Croissant,
-  Droplet,
-  Egg,
-  Flame,
   Loader2,
   Pencil,
-  Scale,
+  Search,
   Sparkles,
   Trash2,
   X,
 } from 'lucide-react';
+import { MacroInlineStat } from '@/components/ui/MacroChips';
+import { MacroInputRow } from '@/components/ui/MacroInputRow';
+import { PhotoSourceSheet } from '@/components/ui/PhotoSourceSheet';
 import {
   createFood,
   deleteFood,
@@ -67,9 +66,9 @@ export function FoodsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoExistingUrl, setPhotoExistingUrl] = useState<string | undefined>(undefined);
+  const [photoSheetOpen, setPhotoSheetOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [aiBusy, setAiBusy] = useState<'name' | 'photo' | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
 
   const previewPhoto = useMemo(
     () => (photoFile ? URL.createObjectURL(photoFile) : photoExistingUrl),
@@ -88,7 +87,6 @@ export function FoodsPage() {
     setPhotoFile(null);
     setPhotoExistingUrl(undefined);
     setError(null);
-    if (fileRef.current) fileRef.current.value = '';
   };
 
   const saveMut = useMutation({
@@ -185,13 +183,26 @@ export function FoodsPage() {
         </button>
       </header>
 
-      <input
-        type="search"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder={t('foods.search') ?? 'Search'}
-        className="mb-4 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
-      />
+      <div className="mb-4 flex items-center gap-2 rounded-full border border-outline-variant/40 bg-surface-container px-4 py-1">
+        <Search className="h-5 w-5 flex-shrink-0 text-on-surface-variant" />
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder={t('foods.search') ?? 'Search'}
+          className="h-12 w-full flex-1 bg-transparent text-sm text-on-background placeholder:text-on-surface-variant focus:outline-none"
+        />
+        {q && (
+          <button
+            type="button"
+            onClick={() => setQ('')}
+            className="grid h-7 w-7 flex-shrink-0 place-items-center rounded-full text-on-surface-variant hover:bg-surface-container-high"
+            aria-label={t('common.clear') ?? 'Clear'}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
 
       {showForm && (
         <div
@@ -241,7 +252,7 @@ export function FoodsPage() {
                   <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-gradient-to-t from-black/80 to-transparent p-3">
                     <button
                       type="button"
-                      onClick={() => fileRef.current?.click()}
+                      onClick={() => setPhotoSheetOpen(true)}
                       className="inline-flex h-9 items-center gap-1.5 rounded-full bg-surface-container/90 px-3 text-xs font-semibold text-on-surface backdrop-blur hover:bg-surface-container-high"
                     >
                       <Camera className="h-3.5 w-3.5" />
@@ -252,7 +263,6 @@ export function FoodsPage() {
                       onClick={() => {
                         setPhotoFile(null);
                         setPhotoExistingUrl(undefined);
-                        if (fileRef.current) fileRef.current.value = '';
                       }}
                       className="grid h-9 w-9 place-items-center rounded-full bg-surface-container/90 text-on-surface backdrop-blur hover:bg-surface-container-high"
                       aria-label={t('foods.photo.remove') ?? 'Remove'}
@@ -264,7 +274,7 @@ export function FoodsPage() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => fileRef.current?.click()}
+                  onClick={() => setPhotoSheetOpen(true)}
                   className="ai-glow group glass-panel relative flex h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-xl p-4"
                 >
                   <div className="z-10 grid h-12 w-12 place-items-center rounded-full bg-surface-container transition-transform group-hover:scale-105">
@@ -275,17 +285,6 @@ export function FoodsPage() {
                   </span>
                 </button>
               )}
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) setPhotoFile(f);
-                }}
-              />
 
               {/* Name + macros card */}
               <div className="space-y-5 rounded-xl border border-surface-variant bg-surface-container-low p-5">
@@ -332,38 +331,43 @@ export function FoodsPage() {
 
                 {/* Macros rows */}
                 <div className="flex flex-col gap-3">
-                  <MacroNumRow
-                    icon={Flame}
-                    iconClass="text-on-surface-variant"
+                  <MacroInputRow
+                    msIcon="local_fire_department"
+                    iconClass="text-primary"
                     label={t('foods.fields.kcal100')}
+                    unit="kcal"
                     value={form.kcal}
                     onChange={(v) => setForm({ ...form, kcal: v })}
                   />
-                  <MacroNumRow
-                    icon={Egg}
+                  <MacroInputRow
+                    msIcon="egg_alt"
                     iconClass="text-primary"
                     label={t('foods.fields.protein')}
+                    unit="g"
                     value={form.protein}
                     onChange={(v) => setForm({ ...form, protein: v })}
                   />
-                  <MacroNumRow
-                    icon={Croissant}
-                    iconClass="text-yellow-500"
+                  <MacroInputRow
+                    msIcon="bakery_dining"
+                    iconClass="text-amber-400"
                     label={t('foods.fields.carbs')}
+                    unit="g"
                     value={form.carbs}
                     onChange={(v) => setForm({ ...form, carbs: v })}
                   />
-                  <MacroNumRow
-                    icon={Droplet}
-                    iconClass="text-red-500"
+                  <MacroInputRow
+                    msIcon="opacity"
+                    iconClass="text-rose-400"
                     label={t('foods.fields.fat')}
+                    unit="g"
                     value={form.fat}
                     onChange={(v) => setForm({ ...form, fat: v })}
                   />
-                  <MacroNumRow
-                    icon={Scale}
+                  <MacroInputRow
+                    msIcon="scale"
                     iconClass="text-on-surface-variant"
                     label={t('foods.fields.portion')}
+                    unit="g"
                     value={form.defaultPortionG}
                     onChange={(v) => setForm({ ...form, defaultPortionG: v })}
                   />
@@ -403,20 +407,25 @@ export function FoodsPage() {
           {foods.map((f) => (
             <li
               key={f._id}
-              className="flex min-w-0 items-center gap-3 rounded-xl border border-border px-3 py-2"
+              className="flex min-w-0 items-center gap-3 rounded-xl bg-surface-container-low px-3 py-2.5"
             >
               {f.imageUrl ? (
-                <img src={f.imageUrl} alt="" className="h-12 w-12 flex-shrink-0 rounded-lg object-cover" />
+                <img src={f.imageUrl} alt="" className="h-14 w-14 flex-shrink-0 rounded-lg object-cover" />
               ) : (
-                <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-lg bg-muted text-base">
+                <div className="grid h-14 w-14 flex-shrink-0 place-items-center rounded-lg bg-surface-container text-base">
                   🥗
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{f.name}</p>
-                <p className="truncate text-[11px] text-muted-foreground">
-                  {Math.round(f.nutritionPer100.kcal)} kcal/100g · P{Math.round(f.nutritionPer100.protein)} · C{Math.round(f.nutritionPer100.carbs)} · G{Math.round(f.nutritionPer100.fat)}
+                <p className="break-words text-sm font-semibold leading-snug text-on-background line-clamp-2">
+                  {f.name}
                 </p>
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <MacroInlineStat macro="kcal" value={f.nutritionPer100.kcal} unit="kcal/100g" />
+                  <MacroInlineStat macro="protein" value={f.nutritionPer100.protein} />
+                  <MacroInlineStat macro="carbs" value={f.nutritionPer100.carbs} />
+                  <MacroInlineStat macro="fat" value={f.nutritionPer100.fat} />
+                </div>
               </div>
               {f.userId && (
                 <div className="flex flex-shrink-0 items-center gap-1">
@@ -450,40 +459,11 @@ export function FoodsPage() {
           ))}
         </ul>
       )}
-    </div>
-  );
-}
 
-function MacroNumRow({
-  icon: Icon,
-  iconClass,
-  label,
-  value,
-  onChange,
-}: {
-  icon: typeof Flame;
-  iconClass: string;
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="flex min-w-0 items-center gap-2">
-        <Icon className={`h-5 w-5 flex-shrink-0 ${iconClass}`} />
-        <span className="truncate text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">
-          {label}
-        </span>
-      </div>
-      <input
-        type="number"
-        inputMode="decimal"
-        min="0"
-        step="0.1"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="0"
-        className="h-10 w-28 rounded-lg border border-surface-variant bg-surface-container px-3 text-center text-sm font-semibold tabular-nums text-on-background focus:border-primary focus:outline-none"
+      <PhotoSourceSheet
+        open={photoSheetOpen}
+        onClose={() => setPhotoSheetOpen(false)}
+        onFile={(f) => setPhotoFile(f)}
       />
     </div>
   );

@@ -10,6 +10,7 @@ import { VoiceProvider } from '@/features/voice/VoiceContext';
 import '@/i18n';
 import { installZodI18n } from '@/lib/zod-i18n';
 import { initTheme } from '@/features/theme/theme';
+import 'react-material-symbols/outlined';
 import '@/styles/globals.css';
 
 installZodI18n();

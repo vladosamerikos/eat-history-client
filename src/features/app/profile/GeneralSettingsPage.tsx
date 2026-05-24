@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { env } from '@/config/env';
-import { useAuthStore } from '@/features/auth/auth.store';
+import { DEFAULT_UNITS, useAuthStore, type UnitPreferences } from '@/features/auth/auth.store';
 import { updateSettings } from '../settings.api';
+import { updateUnits } from '../profile.api';
 import { PageHeader, Section } from './_shared';
 import { Alert } from '@/components/ui/Alert';
 import { Select } from '@/components/ui/Select';
@@ -33,6 +34,27 @@ export function GeneralSettingsPage() {
   const [remindersTz, setRemindersTz] = useState(tz);
   const [msg, setMsg] = useState<Msg>(null);
   const [langMsg, setLangMsg] = useState<Msg>(null);
+  const [units, setUnits] = useState<UnitPreferences>({
+    ...DEFAULT_UNITS,
+    ...(user?.units ?? {}),
+  });
+  const [unitsMsg, setUnitsMsg] = useState<Msg>(null);
+
+  const onChangeUnit = async <K extends keyof UnitPreferences>(
+    key: K,
+    value: UnitPreferences[K],
+  ) => {
+    setUnitsMsg(null);
+    const next = { ...units, [key]: value };
+    setUnits(next);
+    try {
+      const updated = await updateUnits({ [key]: value } as Partial<UnitPreferences>);
+      setUser(updated);
+      setUnitsMsg({ kind: 'success', text: t('settings.units.saved') });
+    } catch (err) {
+      setUnitsMsg({ kind: 'error', text: err instanceof Error ? err.message : 'Error' });
+    }
+  };
 
   const supportedLocales: string[] = (env.supportedLocales ?? ['es', 'en', 'uk']).filter(Boolean);
   const currentLocale = i18n.resolvedLanguage || i18n.language || env.defaultLocale || 'es';
@@ -85,6 +107,52 @@ export function GeneralSettingsPage() {
         {langMsg && (
           <Alert variant={langMsg.kind === 'error' ? 'error' : 'success'} className="mt-3">
             {langMsg.text}
+          </Alert>
+        )}
+      </Section>
+
+      <Section title={t('settings.units.title')} description={t('settings.units.help')}>
+        <div className="grid gap-3">
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs text-muted-foreground">{t('settings.units.weight')}</span>
+            <Select
+              value={units.weight}
+              onValueChange={(v) => onChangeUnit('weight', v as 'kg' | 'lb')}
+              triggerClassName="h-11 w-full rounded-lg"
+              options={[
+                { value: 'kg', label: t('settings.units.weightKg') },
+                { value: 'lb', label: t('settings.units.weightLb') },
+              ]}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs text-muted-foreground">{t('settings.units.volume')}</span>
+            <Select
+              value={units.volume}
+              onValueChange={(v) => onChangeUnit('volume', v as 'ml' | 'floz')}
+              triggerClassName="h-11 w-full rounded-lg"
+              options={[
+                { value: 'ml', label: t('settings.units.volumeMl') },
+                { value: 'floz', label: t('settings.units.volumeFloz') },
+              ]}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs text-muted-foreground">{t('settings.units.height')}</span>
+            <Select
+              value={units.height}
+              onValueChange={(v) => onChangeUnit('height', v as 'cm' | 'ft_in')}
+              triggerClassName="h-11 w-full rounded-lg"
+              options={[
+                { value: 'cm', label: t('settings.units.heightCm') },
+                { value: 'ft_in', label: t('settings.units.heightFtIn') },
+              ]}
+            />
+          </label>
+        </div>
+        {unitsMsg && (
+          <Alert variant={unitsMsg.kind === 'error' ? 'error' : 'success'} className="mt-3">
+            {unitsMsg.text}
           </Alert>
         )}
       </Section>

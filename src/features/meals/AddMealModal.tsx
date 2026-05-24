@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,26 +6,22 @@ import { toast } from 'sonner';
 import {
   BookmarkPlus,
   Camera,
-  Egg,
-  Flame,
   Image as ImageIcon,
   Loader2,
   Mic,
-  Minus,
   Plus,
   ScanLine,
   Sparkles,
   Trash2,
-  Upload,
-  Croissant,
   X,
-  Droplet,
 } from 'lucide-react';
+import { MSIcon } from '@/components/ui/MSIcon';
+import { MacroBadge } from '@/components/ui/MacroChips';
+import { MacroInputRow } from '@/components/ui/MacroInputRow';
+import { PhotoSourceSheet } from '@/components/ui/PhotoSourceSheet';
 import { createFood, listFoods, type Food } from '@/features/foods/foods.api';
 import { estimateNutrition, analyzeMealPhoto } from '@/features/ai/ai.api';
 import { useVoice } from '@/features/voice/VoiceContext';
-import { ActionSheet } from '@/components/ui/ActionSheet';
-import { MacroBadges } from '@/components/ui/MacroBadges';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
 import { FoodCombobox } from './FoodCombobox';
 import {
@@ -151,13 +147,14 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
   const [photoExplicitlyRemoved, setPhotoExplicitlyRemoved] = useState(false);
   const [aiBusy, setAiBusy] = useState<string | 'global' | null>(null);
   const [photoSheetOpen, setPhotoSheetOpen] = useState(false);
+  // Per-item photo analysis sheet
+  const [itemPhotoSheetUid, setItemPhotoSheetUid] = useState<string | null>(null);
 
   const previewPhoto = useMemo(
     () => (photoFile ? URL.createObjectURL(photoFile) : existingPhotoUrl),
     [photoFile, existingPhotoUrl],
   );
-  const cameraRef = useRef<HTMLInputElement>(null);
-  const galleryRef = useRef<HTMLInputElement>(null);
+  // refs replaced by PhotoSourceSheet
 
   const needsHydration = isEdit && items.some((it) => !it.food && meal?.entries.some((e) => e.foodId));
   const { data: foods = [] } = useQuery<Food[]>({
@@ -235,6 +232,42 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
       const patch: Partial<DraftItem> = {};
       if (result.name && !item.customName.trim()) patch.customName = result.name;
       if (result.weightG && grams === 0) {
+        patch.grams = String(Math.round(result.weightG));
+        patch.gramsPerUnit = String(Math.round(result.weightG));
+        patch.qty = '1';
+      }
+      if (result.kcal != null) patch.kcal = String(Math.round(result.kcal));
+      if (result.proteinG != null) patch.protein = String(Math.round(result.proteinG * 10) / 10);
+      if (result.carbsG != null) patch.carbs = String(Math.round(result.carbsG * 10) / 10);
+      if (result.fatG != null) patch.fat = String(Math.round(result.fatG * 10) / 10);
+      updateItem(uid, patch);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'AI estimation failed');
+    } finally {
+      setAiBusy(null);
+    }
+  };
+
+  /**
+   * Análisis IA de UN ingrediente con foto específica (no necesariamente la foto principal
+   * del plato). Sube el File pasado y lo usa para estimar macros para ese item.
+   */
+  const analyzeItemPhoto = async (uid: string, file: File) => {
+    const item = items.find((i) => i.uid === uid);
+    if (!item) return;
+    setAiBusy(uid);
+    setError(null);
+    try {
+      const grams = effectiveGrams(item);
+      const result = await estimateNutrition({
+        image: file,
+        name: item.customName.trim() || undefined,
+        weightG: grams > 0 ? grams : undefined,
+        locale: i18n.language,
+      });
+      const patch: Partial<DraftItem> = {};
+      if (result.name && !item.customName.trim()) patch.customName = result.name;
+      if (result.weightG) {
         patch.grams = String(Math.round(result.weightG));
         patch.gramsPerUnit = String(Math.round(result.weightG));
         patch.qty = '1';
@@ -410,15 +443,9 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
     });
   };
 
-  const macroLabels = {
-    protein: t('meals.macros.protein') ?? 'P',
-    carbs: t('meals.macros.carbs') ?? 'C',
-    fat: t('meals.macros.fat') ?? 'G',
-  };
-
   return (
     <div
-      className="fixed inset-0 z-50 flex bg-black/60 backdrop-blur-sm sm:items-center sm:justify-center sm:p-4"
+      className="fixed inset-0 z-50 flex bg-black/60 backdrop-blur-sm"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -427,7 +454,7 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-        className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-surface shadow-2xl sm:h-auto sm:max-h-[92dvh] sm:max-w-md sm:rounded-2xl sm:border sm:border-outline-variant"
+        className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-surface shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -450,48 +477,37 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
         <div className="flex-1 space-y-3 overflow-y-auto px-5 pb-32">
           {error && <Alert variant="error">{error}</Alert>}
 
-          {/* Summary Strip */}
-          <div className="flex items-center justify-between gap-2 rounded-xl border border-surface-variant/30 bg-surface-container-low/50 px-4 py-3">
-            <MacroBadges
-              kcal={totals.kcal}
-              protein={totals.protein}
-              carbs={totals.carbs}
-              fat={totals.fat}
-              labels={macroLabels}
-              compact
-            />
+          {/* Summary Strip estilo Stitch: icono Flame grande + kcal grande, macros sin label */}
+          <div className="flex flex-col gap-3 rounded-xl border border-surface-variant/30 bg-surface-container-low/50 p-4">
+            <div className="flex items-center gap-3">
+              <span className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-xl bg-primary/10">
+                <MSIcon name="local_fire_department" size={28} className="text-primary" />
+              </span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[34px] font-bold leading-none tabular-nums text-on-background">
+                  {totals.kcal}
+                </span>
+                <span className="text-xs font-medium text-on-surface-variant">kcal</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <MacroBadge
+                macro="protein"
+                label={t('meals.macros.protein')}
+                value={totals.protein}
+              />
+              <MacroBadge
+                macro="carbs"
+                label={t('meals.macros.carbs')}
+                value={totals.carbs}
+              />
+              <MacroBadge
+                macro="fat"
+                label={t('meals.macros.fat')}
+                value={totals.fat}
+              />
+            </div>
           </div>
-
-          {/* Hidden file inputs */}
-          <input
-            ref={cameraRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) {
-                setPhotoFile(f);
-                setPhotoExplicitlyRemoved(false);
-              }
-              if (cameraRef.current) cameraRef.current.value = '';
-            }}
-          />
-          <input
-            ref={galleryRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) {
-                setPhotoFile(f);
-                setPhotoExplicitlyRemoved(false);
-              }
-              if (galleryRef.current) galleryRef.current.value = '';
-            }}
-          />
 
           {/* AI Photo Analysis Card */}
           {previewPhoto ? (
@@ -561,15 +577,6 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
 
           {/* Items Form Card */}
           <div className="relative space-y-6 rounded-xl border border-surface-variant bg-surface-container-low p-6">
-            <button
-              type="button"
-              onClick={addItem}
-              className="btn-press absolute right-2 top-2 grid h-10 w-10 place-items-center rounded-full border border-surface-variant bg-surface-container-high text-primary transition-colors hover:bg-surface-container-highest"
-              title={t('meals.addItem') ?? 'Añadir producto'}
-              aria-label={t('meals.addItem') ?? 'Añadir producto'}
-            >
-              <Plus className="h-5 w-5" />
-            </button>
 
             <AnimatePresence initial={false}>
               {items.map((it, idx) => {
@@ -615,16 +622,28 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
                           })
                         }
                         actionSlot={
-                          <button
-                            type="button"
-                            disabled={busy || !it.customName.trim()}
-                            onClick={() => aiAutocomplete(it.uid, 'name')}
-                            title={t('meals.ai.fromName') ?? 'IA desde nombre'}
-                            className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-md bg-primary/10 text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
-                            aria-label={t('meals.ai.fromName') ?? 'IA desde nombre'}
-                          >
-                            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                          </button>
+                          <div className="flex flex-shrink-0 items-center gap-1">
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => setItemPhotoSheetUid(it.uid)}
+                              title={t('meals.ai.fromPhoto') ?? 'IA desde foto'}
+                              className="grid h-8 w-8 place-items-center rounded-md bg-primary/10 text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                              aria-label={t('meals.ai.fromPhoto') ?? 'IA desde foto'}
+                            >
+                              <Camera className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busy || !it.customName.trim()}
+                              onClick={() => aiAutocomplete(it.uid, 'name')}
+                              title={t('meals.ai.fromName') ?? 'IA desde nombre'}
+                              className="grid h-8 w-8 place-items-center rounded-md bg-primary/10 text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                              aria-label={t('meals.ai.fromName') ?? 'IA desde nombre'}
+                            >
+                              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                            </button>
+                          </div>
                         }
                       />
                     </div>
@@ -667,38 +686,42 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
 
                     {/* Macro rows */}
                     <div className="flex flex-col gap-3">
-                      <MacroRow
-                        icon={Flame}
-                        iconClass="text-on-surface-variant"
+                      <MacroInputRow
+                        msIcon="local_fire_department"
+                        iconClass="text-primary"
                         labelClass="text-on-surface-variant"
                         label={t('meals.macros.kcal') ?? 'Kcal'}
+                        unit="kcal"
                         value={it.food ? String(m.kcal) : it.kcal}
                         readOnly={!!it.food}
                         onChange={(v) => updateItem(it.uid, { kcal: v })}
                       />
-                      <MacroRow
-                        icon={Egg}
+                      <MacroInputRow
+                        msIcon="egg_alt"
                         iconClass="text-primary"
-                        labelClass="text-primary"
+                        labelClass="text-on-surface-variant"
                         label={t('meals.macros.protein') ?? 'Protein'}
+                        unit="g"
                         value={it.food ? String(m.protein) : it.protein}
                         readOnly={!!it.food}
                         onChange={(v) => updateItem(it.uid, { protein: v })}
                       />
-                      <MacroRow
-                        icon={Croissant}
-                        iconClass="text-yellow-500"
-                        labelClass="text-yellow-500"
+                      <MacroInputRow
+                        msIcon="bakery_dining"
+                        iconClass="text-amber-400"
+                        labelClass="text-on-surface-variant"
                         label={t('meals.macros.carbs') ?? 'Carbs'}
+                        unit="g"
                         value={it.food ? String(m.carbs) : it.carbs}
                         readOnly={!!it.food}
                         onChange={(v) => updateItem(it.uid, { carbs: v })}
                       />
-                      <MacroRow
-                        icon={Droplet}
-                        iconClass="text-red-500"
-                        labelClass="text-red-500"
+                      <MacroInputRow
+                        msIcon="opacity"
+                        iconClass="text-rose-400"
+                        labelClass="text-on-surface-variant"
                         label={t('meals.macros.fat') ?? 'Fat'}
+                        unit="g"
                         value={it.food ? String(m.fat) : it.fat}
                         readOnly={!!it.food}
                         onChange={(v) => updateItem(it.uid, { fat: v })}
@@ -732,6 +755,17 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
           </div>
         </div>
 
+        {/* FAB Añadir plato — encima del mic */}
+        <button
+          type="button"
+          onClick={addItem}
+          className="btn-press absolute bottom-32 right-5 z-30 grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:scale-105"
+          aria-label={t('meals.addItem') ?? 'Añadir producto'}
+          title={t('meals.addItem') ?? 'Añadir producto'}
+        >
+          <Plus className="h-6 w-6" />
+        </button>
+
         {/* Footer: mic + add button */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-surface via-surface/95 to-transparent px-5 pb-5 pt-12">
           <div className="pointer-events-auto mx-auto flex max-w-md items-center gap-4">
@@ -761,93 +795,31 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
         </div>
       </motion.div>
 
-      {/* Action sheet: foto general */}
-      <ActionSheet
+      {/* Photo source sheets */}
+      <PhotoSourceSheet
         open={photoSheetOpen}
         onClose={() => setPhotoSheetOpen(false)}
         title={t('meals.photo.takeOrUpload') ?? 'Añadir foto'}
-        items={[
-          {
-            key: 'camera',
-            label: t('meals.photo.takePhoto') ?? 'Tomar foto',
-            icon: Camera,
-            onSelect: () => cameraRef.current?.click(),
-          },
-          {
-            key: 'gallery',
-            label: t('meals.photo.uploadFromGallery') ?? 'Subir desde galería',
-            icon: Upload,
-            onSelect: () => galleryRef.current?.click(),
-          },
-        ]}
+        onFile={(f) => {
+          setPhotoFile(f);
+          setPhotoExplicitlyRemoved(false);
+        }}
+      />
+
+      <PhotoSourceSheet
+        open={!!itemPhotoSheetUid}
+        onClose={() => setItemPhotoSheetUid(null)}
+        title={t('meals.photo.analyzeItem') ?? 'Analizar ingrediente por foto'}
+        onFile={(f) => {
+          const uid = itemPhotoSheetUid;
+          if (uid) void analyzeItemPhoto(uid, f);
+        }}
       />
     </div>
   );
 }
 
 /* ---------- Sub-componentes ---------- */
-
-interface MacroRowProps {
-  icon: typeof Flame;
-  iconClass: string;
-  labelClass: string;
-  label: string;
-  value: string;
-  readOnly?: boolean;
-  onChange: (v: string) => void;
-}
-
-function MacroRow({ icon: Icon, iconClass, labelClass, label, value, readOnly, onChange }: MacroRowProps) {
-  const numericValue = Number(value) || 0;
-  const adjust = (delta: number) => {
-    if (readOnly) return;
-    const next = Math.max(0, Math.round((numericValue + delta) * 10) / 10);
-    onChange(String(next));
-  };
-  return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <Icon className={`h-5 w-5 ${iconClass}`} />
-        <span className={`text-[11px] font-bold uppercase tracking-wide ${labelClass}`}>
-          {label}
-        </span>
-      </div>
-      <div className="flex items-center gap-2 rounded-lg border border-surface-variant/50 bg-surface-container p-1">
-        <button
-          type="button"
-          onClick={() => adjust(-1)}
-          disabled={readOnly}
-          className="grid h-8 w-8 place-items-center rounded bg-surface-variant/20 text-on-surface transition-colors hover:bg-surface-variant/40 disabled:opacity-30"
-          aria-label="-"
-        >
-          <Minus className="h-4 w-4" />
-        </button>
-        <input
-          type="number"
-          inputMode="decimal"
-          min="0"
-          step="0.1"
-          value={value || ''}
-          readOnly={readOnly}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="0"
-          className={`w-16 bg-transparent text-center text-sm font-semibold text-on-background focus:outline-none ${
-            readOnly ? 'opacity-70' : ''
-          }`}
-        />
-        <button
-          type="button"
-          onClick={() => adjust(1)}
-          disabled={readOnly}
-          className="grid h-8 w-8 place-items-center rounded bg-surface-variant/20 text-on-surface transition-colors hover:bg-surface-variant/40 disabled:opacity-30"
-          aria-label="+"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
-      </div>
-    </div>
-  );
-}
 
 // Mantener importación de ImageIcon para evitar tree-shake error; usado solo como referencia futura.
 void ImageIcon;

@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import type { PublicUser } from '@/features/auth/auth.store';
+import type { PublicUser, UnitPreferences } from '@/features/auth/auth.store';
 import { env } from '@/config/env';
 import { useAuthStore } from '@/features/auth/auth.store';
 
@@ -9,6 +9,9 @@ export interface UpdateProfileInput {
 
 export const updateProfile = (body: UpdateProfileInput): Promise<PublicUser> =>
   api('/user/profile', { method: 'PATCH', json: body });
+
+export const updateUnits = (body: Partial<UnitPreferences>): Promise<PublicUser> =>
+  api('/user/units', { method: 'PATCH', json: body });
 
 export async function uploadAvatar(file: File): Promise<PublicUser> {
   const token = useAuthStore.getState().accessToken;

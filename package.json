@@ -38,6 +38,7 @@
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.2",
     "react-i18next": "^15.4.0",
+    "react-material-symbols": "^4.4.0",
     "react-router-dom": "^6.28.1",
     "react-zoom-pan-pinch": "^4.0.3",
     "sonner": "^2.0.7",
