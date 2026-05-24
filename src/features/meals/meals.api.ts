@@ -87,3 +87,27 @@ export async function uploadMealPhoto(mealId: string, file: File): Promise<Meal>
 
 export const removeMealPhoto = (id: string) =>
   api<Meal>(`/meals/${id}/photo`, { method: 'DELETE' });
+
+/**
+ * Sube una foto SIN asociarla a ninguna meal. Devuelve la URL pública
+ * `/v1/uploads/...`. Útil cuando la foto se adjunta antes de que exista
+ * la comida (p.ej. para que el agente de voz la analice).
+ */
+export async function uploadStandalonePhoto(file: File): Promise<{ photoUrl: string; photoKey: string }> {
+  const { env } = await import('@/config/env');
+  const { useAuthStore } = await import('@/features/auth/auth.store');
+  const token = useAuthStore.getState().accessToken;
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await fetch(`${env.apiBaseUrl}/meals/photo-upload`, {
+    method: 'POST',
+    body: fd,
+    credentials: 'include',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(txt || `Upload failed (${res.status})`);
+  }
+  return (await res.json()) as { photoUrl: string; photoKey: string };
+}

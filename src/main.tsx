@@ -6,6 +6,7 @@ import { Toaster } from 'sonner';
 import App from '@/App';
 import { queryClient } from '@/lib/queryClient';
 import { ConfirmProvider } from '@/components/ui/ConfirmDialog';
+import { VoiceProvider } from '@/features/voice/VoiceContext';
 import '@/i18n';
 import { installZodI18n } from '@/lib/zod-i18n';
 import { initTheme } from '@/features/theme/theme';
@@ -22,13 +23,15 @@ createRoot(rootEl).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <ConfirmProvider>
-          <App />
-          <Toaster
-            position="top-center"
-            richColors
-            closeButton
-            toastOptions={{ className: 'text-sm' }}
-          />
+          <VoiceProvider>
+            <App />
+            <Toaster
+              position="top-center"
+              richColors
+              closeButton
+              toastOptions={{ className: 'text-sm' }}
+            />
+          </VoiceProvider>
         </ConfirmProvider>
       </BrowserRouter>
     </QueryClientProvider>

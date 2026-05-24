@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { CalendarDays, ListChecks, Scale, User } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { VoiceDrawer } from '@/features/voice/VoiceDrawer';
+import { VoiceFab } from '@/features/voice/VoiceFab';
 
 const tabs: ReadonlyArray<{ to: string; key: string; exact?: boolean; Icon: LucideIcon }> = [
   { to: '/app', key: 'today', exact: true, Icon: CalendarDays },
@@ -56,6 +58,9 @@ export function AppLayout() {
           ))}
         </ul>
       </nav>
+
+      <VoiceDrawer />
+      <VoiceFab />
     </div>
   );
 }

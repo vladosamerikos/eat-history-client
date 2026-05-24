@@ -3,11 +3,31 @@ import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { BookmarkPlus, Camera, ChevronDown, Image as ImageIcon, Loader2, Mic, Plus, Sparkles, Trash2, X } from 'lucide-react';
+import {
+  BookmarkPlus,
+  Camera,
+  Egg,
+  Flame,
+  Image as ImageIcon,
+  Loader2,
+  Mic,
+  Minus,
+  Plus,
+  ScanLine,
+  Sparkles,
+  Trash2,
+  Upload,
+  Croissant,
+  X,
+  Droplet,
+} from 'lucide-react';
 import { createFood, listFoods, type Food } from '@/features/foods/foods.api';
-import { estimateNutrition } from '@/features/ai/ai.api';
-import { VoiceDrawer } from '@/features/voice/VoiceDrawer';
-import { FoodPicker } from './FoodPicker';
+import { estimateNutrition, analyzeMealPhoto } from '@/features/ai/ai.api';
+import { useVoice } from '@/features/voice/VoiceContext';
+import { ActionSheet } from '@/components/ui/ActionSheet';
+import { MacroBadges } from '@/components/ui/MacroBadges';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { FoodCombobox } from './FoodCombobox';
 import {
   createMeal,
   removeMealPhoto,
@@ -37,8 +57,6 @@ interface DraftItem {
   protein: string;
   carbs: string;
   fat: string;
-  entryPhoto?: File;
-  entryPhotoUrl?: string;
 }
 
 const newId = () => Math.random().toString(36).slice(2, 10);
@@ -79,8 +97,6 @@ function num(v: string): number {
 }
 
 function effectiveGrams(it: DraftItem): number {
-  // Si hay food asociado, qty * g/unidad. Si no y el usuario configuró g/unidad,
-  // también. Si gpu = 0, fallback al campo grams (modo manual puro).
   const gpu = num(it.gramsPerUnit);
   if (gpu > 0) {
     const q = num(it.qty);
@@ -108,32 +124,41 @@ function computeMacros(it: DraftItem): { kcal: number; protein: number; carbs: n
   };
 }
 
+function itemHasData(it: DraftItem): boolean {
+  return !!(
+    it.food ||
+    it.customName.trim() ||
+    num(it.kcal) > 0 ||
+    num(it.protein) > 0 ||
+    num(it.carbs) > 0 ||
+    num(it.fat) > 0
+  );
+}
+
 export function AddMealModal({ date, type, meal, onClose }: Props) {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
+  const confirm = useConfirm();
+  const voice = useVoice();
   const isEdit = Boolean(meal);
 
   const [items, setItems] = useState<DraftItem[]>(
     meal?.entries?.length ? meal.entries.map((e) => entryToDraft(e)) : [emptyItem()],
   );
-  const [pickerForUid, setPickerForUid] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [existingPhotoUrl, setExistingPhotoUrl] = useState<string | undefined>(meal?.photoUrl);
-  // Flag explícito: solo borramos la foto del meal si el usuario tocó el botón ×.
-  // Esto evita que cualquier reset accidental de existingPhotoUrl borre la foto.
   const [photoExplicitlyRemoved, setPhotoExplicitlyRemoved] = useState(false);
-  const [aiBusy, setAiBusy] = useState<string | null>(null);
-  const [voiceOpen, setVoiceOpen] = useState(false);
+  const [aiBusy, setAiBusy] = useState<string | 'global' | null>(null);
+  const [photoSheetOpen, setPhotoSheetOpen] = useState(false);
+
   const previewPhoto = useMemo(
     () => (photoFile ? URL.createObjectURL(photoFile) : existingPhotoUrl),
     [photoFile, existingPhotoUrl],
   );
-  const fileRef = useRef<HTMLInputElement>(null);
-  const entryFileRef = useRef<HTMLInputElement>(null);
-  const [entryPhotoForUid, setEntryPhotoForUid] = useState<string | null>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
 
-  // Pre-cargar foods cuando hay entries con foodId pendientes de hidratar.
   const needsHydration = isEdit && items.some((it) => !it.food && meal?.entries.some((e) => e.foodId));
   const { data: foods = [] } = useQuery<Food[]>({
     queryKey: ['foods', 'hydrate'],
@@ -151,10 +176,8 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
         const found = foods.find((f) => f._id === entry.foodId);
         if (found) {
           changed = true;
-          // Re-hidratamos el draft completo para recalcular qty/gramsPerUnit a partir
-          // del food y conservar los datos persistidos del entry.
           const rehydrated = entryToDraft(entry, found);
-          return { ...rehydrated, uid: it.uid, entryPhoto: it.entryPhoto, entryPhotoUrl: it.entryPhotoUrl };
+          return { ...rehydrated, uid: it.uid };
         }
         return it;
       });
@@ -201,7 +224,7 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
     setAiBusy(uid);
     setError(null);
     try {
-      const photoForAi = mode === 'photo' ? (item.entryPhoto ?? photoFile ?? undefined) : undefined;
+      const photoForAi = mode === 'photo' ? (photoFile ?? undefined) : undefined;
       const grams = effectiveGrams(item);
       const result = await estimateNutrition({
         image: photoForAi,
@@ -223,6 +246,63 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
       updateItem(uid, patch);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'AI estimation failed');
+    } finally {
+      setAiBusy(null);
+    }
+  };
+
+  /**
+   * Análisis IA del plato completo: detecta TODOS los ingredientes visibles
+   * y crea un DraftItem por cada uno (reemplaza los items actuales).
+   */
+  const analyzeFullPhoto = async () => {
+    if (!photoFile && !existingPhotoUrl) return;
+    const itemsHaveData = items.some(itemHasData);
+    if (itemsHaveData) {
+      const ok = await confirm({
+        title: t('meals.confirmOverwriteTitle') ?? '¿Sobrescribir datos?',
+        description:
+          t('meals.confirmOverwrite') ??
+          'Ya hay información introducida. ¿Reemplazar con el análisis IA?',
+        confirmText: t('meals.analyzePhoto') ?? 'Analizar',
+      });
+      if (!ok) return;
+    }
+    setAiBusy('global');
+    setError(null);
+    try {
+      // Obtiene el File: usa el local si existe, si no descarga el remoto.
+      let file: File | null = photoFile;
+      if (!file && existingPhotoUrl) {
+        const res = await fetch(existingPhotoUrl, { credentials: 'include' });
+        if (!res.ok) throw new Error('No se pudo descargar la foto existente');
+        const blob = await res.blob();
+        const ext = existingPhotoUrl.split('.').pop()?.toLowerCase() ?? 'jpg';
+        file = new File([blob], `meal-photo.${ext}`, { type: blob.type || 'image/jpeg' });
+      }
+      if (!file) return;
+      const analysis = await analyzeMealPhoto({
+        image: file,
+        locale: i18n.language?.split('-')[0],
+      });
+      if (analysis.items.length === 0) {
+        setError(analysis.notes ?? 'La IA no detectó ningún alimento.');
+        return;
+      }
+      const drafts: DraftItem[] = analysis.items.map((it) => ({
+        uid: newId(),
+        customName: it.name,
+        qty: '1',
+        gramsPerUnit: String(it.weightG || 100),
+        grams: String(it.weightG || 0),
+        kcal: String(Math.round(it.kcal)),
+        protein: String(Math.round(it.proteinG * 10) / 10),
+        carbs: String(Math.round(it.carbsG * 10) / 10),
+        fat: String(Math.round(it.fatG * 10) / 10),
+      }));
+      setItems(drafts);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'AI analyze failed');
     } finally {
       setAiBusy(null);
     }
@@ -289,7 +369,6 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
       const name = it.customName.trim();
       if (!name) throw new Error(t('meals.errors.noName') ?? 'Add a name first');
       const grams = effectiveGrams(it) || 100;
-      // nutritionPer100 viene de los macros / grams * 100
       const factor = grams > 0 ? 100 / grams : 1;
       const np = {
         kcal: Math.round(num(it.kcal) * factor),
@@ -302,7 +381,6 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
         defaultPortionG: Math.round(grams),
         nutritionPer100: np,
       });
-      // Vincular el item al food reci\u00e9n creado para futuros c\u00e1lculos.
       updateItem(uid, {
         food,
         customName: food.name,
@@ -314,7 +392,7 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
     },
     onSuccess: (food) => {
       qc.invalidateQueries({ queryKey: ['foods'] });
-      toast.success(t('meals.savedAsFood', { name: food.name }) ?? `\u201c${food.name}\u201d guardado`);
+      toast.success(t('meals.savedAsFood', { name: food.name }) ?? `“${food.name}” guardado`);
     },
     onError: (e) => {
       toast.error(e instanceof Error ? e.message : t('common.errorGeneric'));
@@ -323,441 +401,453 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
 
   const canSubmit = items.some((it) => it.food || it.customName.trim());
 
+  const openVoice = () => {
+    voice.open({
+      onChanged: () => {
+        qc.invalidateQueries({ queryKey: ['meals'] });
+        qc.invalidateQueries({ queryKey: ['weights'] });
+      },
+    });
+  };
+
+  const macroLabels = {
+    protein: t('meals.macros.protein') ?? 'P',
+    carbs: t('meals.macros.carbs') ?? 'C',
+    fat: t('meals.macros.fat') ?? 'G',
+  };
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex bg-black/60 backdrop-blur-sm sm:items-center sm:justify-center sm:p-4"
       onClick={(e) => {
-        // Solo cerrar si el click es directamente en el backdrop, no en hijos.
-        // Evita cierre accidental por eventos sintéticos que llegan tras cerrar
-        // el file picker / cámara nativa en móviles.
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <motion.div
-        initial={{ y: 60, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-        className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-background shadow-2xl sm:max-h-[88dvh] sm:rounded-2xl"
+        className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-surface shadow-2xl sm:h-auto sm:max-h-[92dvh] sm:max-w-md sm:rounded-2xl sm:border sm:border-outline-variant"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-          <h3 className="truncate text-base font-semibold">
-            {t(`meals.types.${type}`)} · {isEdit ? t('meals.edit') : t('meals.add')}
-          </h3>
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => setVoiceOpen(true)}
-              className="grid h-8 w-8 place-items-center rounded-full text-primary hover:bg-primary/10"
-              aria-label={t('voice.openAria')}
-              title={t('voice.openAria')}
-            >
-              <Mic className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted"
-              aria-label="Close"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+        {/* Header */}
+        <header className="sticky top-0 z-10 flex items-center justify-between gap-2 bg-surface/95 px-5 py-4 backdrop-blur-md">
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid h-10 w-10 place-items-center rounded-full border border-surface-variant bg-surface-container text-on-surface-variant transition-colors hover:text-primary"
+            aria-label={t('common.close') ?? 'Close'}
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <h1 className="text-lg font-bold text-on-background">
+            {isEdit ? t('meals.edit') : t('meals.add')} · {t(`meals.types.${type}`)}
+          </h1>
+          <div className="w-10" />
         </header>
 
-        <div className="flex items-center justify-between gap-3 bg-muted/50 px-4 py-2 text-xs">
-          <div>
-            <span className="text-base font-semibold text-foreground">{Math.round(totals.kcal)}</span>{' '}
-            <span className="text-muted-foreground">kcal</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="rounded-full bg-primary/15 px-2 py-0.5 text-primary dark:bg-primary/25">
-              P {Math.round(totals.protein * 10) / 10}g
-            </span>
-            <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-amber-700 dark:bg-amber-500/25 dark:text-amber-300">
-              C {Math.round(totals.carbs * 10) / 10}g
-            </span>
-            <span className="rounded-full bg-rose-500/15 px-2 py-0.5 text-rose-700 dark:bg-rose-500/25 dark:text-rose-300">
-              G {Math.round(totals.fat * 10) / 10}g
-            </span>
-          </div>
-        </div>
-
-        <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
+        {/* Scrollable body */}
+        <div className="flex-1 space-y-3 overflow-y-auto px-5 pb-32">
           {error && <Alert variant="error">{error}</Alert>}
 
-          <div className="flex items-center gap-3 rounded-xl border border-dashed border-border p-3">
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) {
-                  setPhotoFile(f);
-                  setPhotoExplicitlyRemoved(false);
-                }
-              }}
+          {/* Summary Strip */}
+          <div className="flex items-center justify-between gap-2 rounded-xl border border-surface-variant/30 bg-surface-container-low/50 px-4 py-3">
+            <MacroBadges
+              kcal={totals.kcal}
+              protein={totals.protein}
+              carbs={totals.carbs}
+              fat={totals.fat}
+              labels={macroLabels}
+              compact
             />
-            {previewPhoto ? (
-              <div className="relative">
-                <img src={previewPhoto} alt="" className="h-14 w-14 rounded-lg object-cover" />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPhotoFile(null);
-                    setExistingPhotoUrl(undefined);
-                    setPhotoExplicitlyRemoved(true);
-                    if (fileRef.current) fileRef.current.value = '';
-                  }}
-                  className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-destructive text-xs text-white"
-                  aria-label={t('meals.photo.remove')}
-                >
-                  ×
-                </button>
-              </div>
-            ) : (
-              <div className="grid h-14 w-14 place-items-center rounded-lg bg-muted text-muted-foreground">
-                <ImageIcon className="h-5 w-5" />
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full border border-border px-3 text-sm font-medium hover:bg-muted"
-            >
-              <Camera className="h-4 w-4" />
-              {previewPhoto ? t('meals.photo.change') : t('meals.photo.add')}
-            </button>
           </div>
 
-          {items.length > 1 && (
-            <p className="text-[11px] text-muted-foreground">
-              {t('meals.photo.generalHint') ?? 'Foto del plato completo (opcional)'}
-            </p>
+          {/* Hidden file inputs */}
+          <input
+            ref={cameraRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) {
+                setPhotoFile(f);
+                setPhotoExplicitlyRemoved(false);
+              }
+              if (cameraRef.current) cameraRef.current.value = '';
+            }}
+          />
+          <input
+            ref={galleryRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) {
+                setPhotoFile(f);
+                setPhotoExplicitlyRemoved(false);
+              }
+              if (galleryRef.current) galleryRef.current.value = '';
+            }}
+          />
+
+          {/* AI Photo Analysis Card */}
+          {previewPhoto ? (
+            <div className="ai-glow relative overflow-hidden rounded-xl">
+              <img src={previewPhoto} alt="" className="aspect-video w-full object-cover" />
+              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-gradient-to-t from-black/80 to-transparent p-3">
+                <button
+                  type="button"
+                  onClick={() => setPhotoSheetOpen(true)}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full bg-surface-container/90 px-3 text-xs font-semibold text-on-surface backdrop-blur hover:bg-surface-container-high"
+                >
+                  <Camera className="h-3.5 w-3.5" />
+                  {t('meals.photo.change')}
+                </button>
+                <div className="flex items-center gap-2">
+                  <motion.button
+                    type="button"
+                    onClick={analyzeFullPhoto}
+                    disabled={aiBusy === 'global'}
+                    whileTap={{ scale: 0.95 }}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-3.5 text-xs font-semibold text-primary-foreground shadow-lg disabled:opacity-60"
+                  >
+                    {aiBusy === 'global' ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4" />
+                    )}
+                    {t('meals.analyzePhoto') ?? 'Analizar'}
+                  </motion.button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPhotoFile(null);
+                      setExistingPhotoUrl(undefined);
+                      setPhotoExplicitlyRemoved(true);
+                    }}
+                    className="grid h-9 w-9 place-items-center rounded-full bg-surface-container/90 text-on-surface backdrop-blur hover:bg-surface-container-high"
+                    aria-label={t('meals.photo.remove')}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setPhotoSheetOpen(true)}
+              className="ai-glow group glass-panel relative flex h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-xl p-4"
+            >
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-primary-container/5 to-transparent opacity-50"
+              />
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-primary/10 blur-2xl"
+              />
+              <div className="z-10 grid h-12 w-12 place-items-center rounded-full bg-surface-container transition-transform group-hover:scale-105">
+                <ScanLine className="h-5 w-5 text-primary" />
+              </div>
+              <span className="z-10 text-sm font-semibold text-primary">
+                {t('meals.aiPhotoTitle') ?? 'AI Análisis por foto'}
+              </span>
+            </button>
           )}
 
-          <AnimatePresence initial={false}>
-            {items.map((it, idx) => {
-              const m = computeMacros(it);
-              const totalG = effectiveGrams(it);
-              const busy = aiBusy === it.uid;
-              const entryPhotoPreview = it.entryPhoto
-                ? URL.createObjectURL(it.entryPhoto)
-                : it.entryPhotoUrl;
-              const aiPhotoAvailable = Boolean(it.entryPhoto || photoFile);
-              return (
-                <motion.div
-                  key={it.uid}
-                  layout
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, height: 0, marginTop: -8, transition: { duration: 0.15 } }}
-                  className="rounded-xl border border-border bg-card p-3"
-                >
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                      #{idx + 1}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs font-medium text-foreground">{m.kcal} kcal</span>
-                      {items.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeItem(it.uid)}
-                          className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                          aria-label={t('common.remove') ?? 'Remove'}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
+          {/* Items Form Card */}
+          <div className="relative space-y-6 rounded-xl border border-surface-variant bg-surface-container-low p-6">
+            <button
+              type="button"
+              onClick={addItem}
+              className="btn-press absolute right-2 top-2 grid h-10 w-10 place-items-center rounded-full border border-surface-variant bg-surface-container-high text-primary transition-colors hover:bg-surface-container-highest"
+              title={t('meals.addItem') ?? 'Añadir producto'}
+              aria-label={t('meals.addItem') ?? 'Añadir producto'}
+            >
+              <Plus className="h-5 w-5" />
+            </button>
 
-                  {it.food ? (
-                    <>
-                      <div className="mb-2 flex items-center justify-between gap-2 rounded-lg bg-muted/60 px-2 py-1.5">
-                        <span className="truncate text-sm font-medium">{it.food.name}</span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            updateItem(it.uid, {
-                              food: undefined,
-                              customName: '',
-                              qty: '1',
-                              gramsPerUnit: '0',
-                            })
-                          }
-                          className="text-xs text-muted-foreground hover:underline"
-                        >
-                          {t('meals.changeFood')}
-                        </button>
-                      </div>
-                      <div className="mb-2 grid grid-cols-[1fr,1fr,auto] items-end gap-2">
-                        <NumField
-                          label={t('meals.qty') ?? 'Cantidad'}
-                          value={it.qty}
-                          onChange={(v) => updateItem(it.uid, { qty: v })}
-                        />
-                        <NumField
-                          label={t('meals.gramsPerUnit') ?? 'g / unidad'}
-                          value={it.gramsPerUnit}
-                          onChange={(v) => updateItem(it.uid, { gramsPerUnit: v })}
-                        />
-                        <div className="flex h-10 items-center rounded-lg bg-muted px-3 text-xs font-semibold tabular-nums">
-                          = {Math.round(totalG)}g
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setPickerForUid(it.uid)}
-                      className="mb-2 flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-dashed border-border bg-background px-3 text-sm text-muted-foreground hover:bg-muted"
-                    >
-                      <span className="truncate">
-                        {it.customName.trim() || (t('meals.pickOrType') ?? 'Elegir comida o escribir')}
-                      </span>
-                      <ChevronDown className="h-4 w-4 flex-shrink-0" />
-                    </button>
-                  )}
-
-                  {!it.food && (
-                    <input
-                      value={it.customName}
-                      onChange={(e) => updateItem(it.uid, { customName: e.target.value })}
-                      placeholder={t('meals.customName') ?? 'Nombre del producto'}
-                      className="mb-2 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-                    />
-                  )}
-
-                  {!it.food && (
-                    <div className="mb-2 grid grid-cols-[1fr,1fr,auto] items-end gap-2">
-                      <NumField
-                        label={t('meals.qty') ?? 'Cantidad'}
-                        value={it.qty}
-                        onChange={(v) => updateItem(it.uid, { qty: v })}
-                      />
-                      <NumField
-                        label={t('meals.gramsPerUnit') ?? 'g / unidad'}
-                        value={it.gramsPerUnit}
-                        onChange={(v) => updateItem(it.uid, { gramsPerUnit: v })}
-                      />
-                      <div className="flex h-10 items-center rounded-lg bg-muted px-3 text-xs font-semibold tabular-nums">
-                        = {Math.round(totalG)}g
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-4 gap-1.5">
-                    <NumField
-                      label="kcal"
-                      value={it.food ? String(m.kcal) : it.kcal}
-                      onChange={(v) => updateItem(it.uid, { kcal: v })}
-                      readOnly={!!it.food}
-                    />
-                    <NumField
-                      label="P"
-                      value={it.food ? String(m.protein) : it.protein}
-                      onChange={(v) => updateItem(it.uid, { protein: v })}
-                      readOnly={!!it.food}
-                      tone="primary"
-                    />
-                    <NumField
-                      label="C"
-                      value={it.food ? String(m.carbs) : it.carbs}
-                      onChange={(v) => updateItem(it.uid, { carbs: v })}
-                      readOnly={!!it.food}
-                      tone="amber"
-                    />
-                    <NumField
-                      label="G"
-                      value={it.food ? String(m.fat) : it.fat}
-                      onChange={(v) => updateItem(it.uid, { fat: v })}
-                      readOnly={!!it.food}
-                      tone="rose"
-                    />
-                  </div>
-
-                  {!it.food && (
-                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                      {entryPhotoPreview && (
-                        <div className="relative">
-                          <img
-                            src={entryPhotoPreview}
-                            alt=""
-                            className="h-8 w-8 rounded-md object-cover"
-                          />
+            <AnimatePresence initial={false}>
+              {items.map((it, idx) => {
+                const m = computeMacros(it);
+                const totalG = effectiveGrams(it);
+                const busy = aiBusy === it.uid;
+                return (
+                  <motion.div
+                    key={it.uid}
+                    layout
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, height: 0, marginTop: -16, transition: { duration: 0.15 } }}
+                    className="flex flex-col gap-4"
+                  >
+                    {/* Name row */}
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+                          #{idx + 1} {t('meals.itemLabel') ?? 'Plato'}
+                        </label>
+                        {items.length > 1 && (
                           <button
                             type="button"
-                            onClick={() =>
-                              updateItem(it.uid, { entryPhoto: undefined, entryPhotoUrl: undefined })
-                            }
-                            className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-destructive text-[9px] text-white"
-                            aria-label="x"
+                            onClick={() => removeItem(it.uid)}
+                            className="grid h-7 w-7 place-items-center rounded-full text-on-surface-variant transition-colors hover:bg-destructive/10 hover:text-destructive"
+                            aria-label={t('common.remove') ?? 'Remove'}
                           >
-                            ×
+                            <Trash2 className="h-3.5 w-3.5" />
                           </button>
-                        </div>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEntryPhotoForUid(it.uid);
-                          entryFileRef.current?.click();
-                        }}
-                        className="inline-flex h-8 items-center gap-1 rounded-full border border-border px-2.5 text-[11px] font-medium hover:bg-muted"
-                      >
-                        <Camera className="h-3 w-3" />
-                        {entryPhotoPreview
-                          ? (t('meals.entryPhoto.change') ?? 'Cambiar foto')
-                          : (t('meals.entryPhoto.add') ?? 'Foto del producto')}
-                      </button>
-                      <button
-                        type="button"
-                        disabled={busy || !aiPhotoAvailable}
-                        onClick={() => aiAutocomplete(it.uid, 'photo')}
-                        title={!aiPhotoAvailable ? (t('meals.ai.needsPhoto') ?? 'Añade una foto primero') : undefined}
-                        className="inline-flex h-8 items-center gap-1 rounded-full bg-primary/10 px-2.5 text-[11px] font-medium text-primary hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-primary/20 dark:text-primary-foreground"
-                      >
-                        {busy ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <Sparkles className="h-3 w-3" />
                         )}
-                        {t('meals.ai.fromPhoto') ?? 'IA desde foto'}
-                      </button>
-                      <button
-                        type="button"
-                        disabled={busy || !it.customName.trim()}
-                        onClick={() => aiAutocomplete(it.uid, 'name')}
-                        title={!it.customName.trim() ? (t('meals.ai.needsName') ?? 'Escribe el nombre primero') : undefined}
-                        className="inline-flex h-8 items-center gap-1 rounded-full bg-primary/10 px-2.5 text-[11px] font-medium text-primary hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-primary/20 dark:text-primary-foreground"
-                      >
-                        {busy ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <Sparkles className="h-3 w-3" />
-                        )}
-                        {t('meals.ai.fromName') ?? 'IA desde nombre'}
-                      </button>
-                      {it.customName.trim() && num(it.kcal) > 0 && (
-                        <button
-                          type="button"
-                          disabled={saveAsFood.isPending}
-                          onClick={() => saveAsFood.mutate(it.uid)}
-                          className="inline-flex h-8 items-center gap-1 rounded-full border border-border px-2.5 text-[11px] font-medium text-foreground hover:bg-muted disabled:opacity-50"
-                          title={t('meals.saveAsFood') ?? 'Guardar en mi catálogo'}
-                        >
-                          {saveAsFood.isPending && saveAsFood.variables === it.uid ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <BookmarkPlus className="h-3 w-3" />
-                          )}
-                          {t('meals.saveAsFood') ?? 'Guardar en mi catálogo'}
-                        </button>
-                      )}
+                      </div>
+                      <FoodCombobox
+                        value={it.customName || it.food?.name || ''}
+                        food={it.food ?? null}
+                        onTextChange={(text) => updateItem(it.uid, { customName: text })}
+                        onPickFood={(f) => selectFood(it.uid, f)}
+                        onClearFood={() =>
+                          updateItem(it.uid, {
+                            food: undefined,
+                            qty: '1',
+                            gramsPerUnit: '0',
+                          })
+                        }
+                        actionSlot={
+                          <button
+                            type="button"
+                            disabled={busy || !it.customName.trim()}
+                            onClick={() => aiAutocomplete(it.uid, 'name')}
+                            title={t('meals.ai.fromName') ?? 'IA desde nombre'}
+                            className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-md bg-primary/10 text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                            aria-label={t('meals.ai.fromName') ?? 'IA desde nombre'}
+                          >
+                            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                          </button>
+                        }
+                      />
                     </div>
-                  )}
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
 
-          <button
-            type="button"
-            onClick={addItem}
-            className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            {t('meals.addItem') ?? 'Añadir producto'}
-          </button>
+                    {/* Qty + grams */}
+                    <div className="flex items-end gap-4">
+                      <div className="flex w-24 flex-col gap-2">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+                          {t('meals.qty') ?? 'Cantidad'}
+                        </label>
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          min="0"
+                          step="0.1"
+                          value={it.qty}
+                          onChange={(e) => updateItem(it.uid, { qty: e.target.value })}
+                          className="h-10 w-full rounded-lg border border-surface-variant bg-surface-container-low px-3 text-sm text-on-background focus:border-primary focus:outline-none"
+                        />
+                      </div>
+                      <div className="flex flex-1 flex-col gap-2">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+                          {t('meals.gramsPerUnit') ?? 'g / unidad'}
+                        </label>
+                        <div className="flex h-10 overflow-hidden rounded-lg border border-surface-variant bg-surface-container-low">
+                          <input
+                            type="number"
+                            inputMode="decimal"
+                            min="0"
+                            value={it.gramsPerUnit}
+                            onChange={(e) => updateItem(it.uid, { gramsPerUnit: e.target.value })}
+                            className="flex-1 border-none bg-transparent px-3 text-sm text-on-background focus:outline-none focus:ring-0"
+                          />
+                          <div className="flex items-center whitespace-nowrap border-l border-surface-variant bg-surface-variant/50 px-3 text-xs font-semibold text-on-surface-variant">
+                            = {Math.round(totalG)}g
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Macro rows */}
+                    <div className="flex flex-col gap-3">
+                      <MacroRow
+                        icon={Flame}
+                        iconClass="text-on-surface-variant"
+                        labelClass="text-on-surface-variant"
+                        label={t('meals.macros.kcal') ?? 'Kcal'}
+                        value={it.food ? String(m.kcal) : it.kcal}
+                        readOnly={!!it.food}
+                        onChange={(v) => updateItem(it.uid, { kcal: v })}
+                      />
+                      <MacroRow
+                        icon={Egg}
+                        iconClass="text-primary"
+                        labelClass="text-primary"
+                        label={t('meals.macros.protein') ?? 'Protein'}
+                        value={it.food ? String(m.protein) : it.protein}
+                        readOnly={!!it.food}
+                        onChange={(v) => updateItem(it.uid, { protein: v })}
+                      />
+                      <MacroRow
+                        icon={Croissant}
+                        iconClass="text-yellow-500"
+                        labelClass="text-yellow-500"
+                        label={t('meals.macros.carbs') ?? 'Carbs'}
+                        value={it.food ? String(m.carbs) : it.carbs}
+                        readOnly={!!it.food}
+                        onChange={(v) => updateItem(it.uid, { carbs: v })}
+                      />
+                      <MacroRow
+                        icon={Droplet}
+                        iconClass="text-red-500"
+                        labelClass="text-red-500"
+                        label={t('meals.macros.fat') ?? 'Fat'}
+                        value={it.food ? String(m.fat) : it.fat}
+                        readOnly={!!it.food}
+                        onChange={(v) => updateItem(it.uid, { fat: v })}
+                      />
+                    </div>
+
+                    {/* Save-as-food (visible si custom + tiene macros) */}
+                    {!it.food && it.customName.trim() && num(it.kcal) > 0 && (
+                      <button
+                        type="button"
+                        disabled={saveAsFood.isPending}
+                        onClick={() => saveAsFood.mutate(it.uid)}
+                        className="inline-flex h-9 items-center justify-center gap-1.5 self-start rounded-full border border-outline-variant px-3 text-xs font-medium text-on-surface-variant transition-colors hover:bg-surface-container-high disabled:opacity-50"
+                      >
+                        {saveAsFood.isPending && saveAsFood.variables === it.uid ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <BookmarkPlus className="h-3.5 w-3.5" />
+                        )}
+                        {t('meals.saveAsFood') ?? 'Guardar en mi catálogo'}
+                      </button>
+                    )}
+
+                    {idx < items.length - 1 && (
+                      <div className="border-b border-outline-variant/30" />
+                    )}
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
         </div>
 
-        <footer className="border-t border-border bg-background px-4 py-3">
-          <button
-            type="button"
-            disabled={!canSubmit || save.isPending}
-            onClick={() => save.mutate()}
-            className="h-11 w-full rounded-full bg-primary text-sm font-medium text-primary-foreground transition-transform active:scale-[0.98] disabled:opacity-50"
-          >
-            {save.isPending ? '…' : isEdit ? t('meals.saveEdit') : t('meals.confirm')}
-          </button>
-        </footer>
-
-        <input
-          ref={entryFileRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f && entryPhotoForUid) {
-              updateItem(entryPhotoForUid, { entryPhoto: f, entryPhotoUrl: undefined });
-            }
-            setEntryPhotoForUid(null);
-            if (entryFileRef.current) entryFileRef.current.value = '';
-          }}
-        />
-
-        <FoodPicker
-          open={pickerForUid !== null}
-          onClose={() => setPickerForUid(null)}
-          onSelect={(f) => {
-            if (pickerForUid) selectFood(pickerForUid, f);
-          }}
-        />
+        {/* Footer: mic + add button */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-surface via-surface/95 to-transparent px-5 pb-5 pt-12">
+          <div className="pointer-events-auto mx-auto flex max-w-md items-center gap-4">
+            <button
+              type="button"
+              onClick={openVoice}
+              className="btn-press grid h-14 w-14 flex-shrink-0 place-items-center rounded-full border border-surface-variant bg-surface-container-high text-primary shadow-md transition-all hover:bg-primary/10"
+              aria-label={t('voice.openAria') ?? 'Asistente de voz'}
+            >
+              <Mic className="h-7 w-7" />
+            </button>
+            <button
+              type="button"
+              disabled={!canSubmit || save.isPending}
+              onClick={() => save.mutate()}
+              className="btn-press h-14 flex-grow rounded-full bg-primary-container text-base font-bold text-on-primary-container shadow-lg transition-all hover:shadow-primary/20 disabled:opacity-50"
+            >
+              {save.isPending ? (
+                <Loader2 className="mx-auto h-5 w-5 animate-spin" />
+              ) : isEdit ? (
+                t('meals.saveEdit') ?? 'Guardar cambios'
+              ) : (
+                t('meals.addMealCta') ?? t('meals.add') ?? 'Añadir comida'
+              )}
+            </button>
+          </div>
+        </div>
       </motion.div>
 
-      <VoiceDrawer
-        open={voiceOpen}
-        onClose={() => setVoiceOpen(false)}
-        onChanged={() => {
-          qc.invalidateQueries({ queryKey: ['meals'] });
-          qc.invalidateQueries({ queryKey: ['weights'] });
-        }}
+      {/* Action sheet: foto general */}
+      <ActionSheet
+        open={photoSheetOpen}
+        onClose={() => setPhotoSheetOpen(false)}
+        title={t('meals.photo.takeOrUpload') ?? 'Añadir foto'}
+        items={[
+          {
+            key: 'camera',
+            label: t('meals.photo.takePhoto') ?? 'Tomar foto',
+            icon: Camera,
+            onSelect: () => cameraRef.current?.click(),
+          },
+          {
+            key: 'gallery',
+            label: t('meals.photo.uploadFromGallery') ?? 'Subir desde galería',
+            icon: Upload,
+            onSelect: () => galleryRef.current?.click(),
+          },
+        ]}
       />
     </div>
   );
 }
 
-function NumField({
-  label,
-  value,
-  onChange,
-  readOnly,
-  tone,
-}: {
+/* ---------- Sub-componentes ---------- */
+
+interface MacroRowProps {
+  icon: typeof Flame;
+  iconClass: string;
+  labelClass: string;
   label: string;
   value: string;
-  onChange: (v: string) => void;
   readOnly?: boolean;
-  tone?: 'primary' | 'amber' | 'rose';
-}) {
-  const toneCls =
-    tone === 'primary'
-      ? 'text-primary'
-      : tone === 'amber'
-        ? 'text-amber-600 dark:text-amber-400'
-        : tone === 'rose'
-          ? 'text-rose-600 dark:text-rose-400'
-          : 'text-muted-foreground';
+  onChange: (v: string) => void;
+}
+
+function MacroRow({ icon: Icon, iconClass, labelClass, label, value, readOnly, onChange }: MacroRowProps) {
+  const numericValue = Number(value) || 0;
+  const adjust = (delta: number) => {
+    if (readOnly) return;
+    const next = Math.max(0, Math.round((numericValue + delta) * 10) / 10);
+    onChange(String(next));
+  };
   return (
-    <label className="flex flex-col gap-0.5">
-      <span className={`text-[10px] font-medium uppercase tracking-wide ${toneCls}`}>{label}</span>
-      <input
-        type="number"
-        inputMode="decimal"
-        min="0"
-        step="0.1"
-        value={value}
-        readOnly={readOnly}
-        onChange={(e) => onChange(e.target.value)}
-        className={`h-9 w-full rounded-md border border-border bg-background px-1.5 text-center text-xs font-medium tabular-nums focus:outline-none focus:ring-2 focus:ring-primary/40 ${readOnly ? 'opacity-70' : ''}`}
-      />
-    </label>
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <Icon className={`h-5 w-5 ${iconClass}`} />
+        <span className={`text-[11px] font-bold uppercase tracking-wide ${labelClass}`}>
+          {label}
+        </span>
+      </div>
+      <div className="flex items-center gap-2 rounded-lg border border-surface-variant/50 bg-surface-container p-1">
+        <button
+          type="button"
+          onClick={() => adjust(-1)}
+          disabled={readOnly}
+          className="grid h-8 w-8 place-items-center rounded bg-surface-variant/20 text-on-surface transition-colors hover:bg-surface-variant/40 disabled:opacity-30"
+          aria-label="-"
+        >
+          <Minus className="h-4 w-4" />
+        </button>
+        <input
+          type="number"
+          inputMode="decimal"
+          min="0"
+          step="0.1"
+          value={value || ''}
+          readOnly={readOnly}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="0"
+          className={`w-16 bg-transparent text-center text-sm font-semibold text-on-background focus:outline-none ${
+            readOnly ? 'opacity-70' : ''
+          }`}
+        />
+        <button
+          type="button"
+          onClick={() => adjust(1)}
+          disabled={readOnly}
+          className="grid h-8 w-8 place-items-center rounded bg-surface-variant/20 text-on-surface transition-colors hover:bg-surface-variant/40 disabled:opacity-30"
+          aria-label="+"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
   );
 }
+
+// Mantener importación de ImageIcon para evitar tree-shake error; usado solo como referencia futura.
+void ImageIcon;

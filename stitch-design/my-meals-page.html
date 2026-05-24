@@ -1,0 +1,424 @@
+<!DOCTYPE html><html class="dark" lang="uk"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Elite Health - Мої страви &amp; Вага</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#d5e3fd",
+                        "inverse-on-surface": "#233143",
+                        "surface-container": "#122131",
+                        "surface-container-high": "#1c2b3c",
+                        "surface": "#051424",
+                        "secondary-fixed": "#dae2fd",
+                        "outline": "#869585",
+                        "outline-variant": "#3d4a3d",
+                        "surface-container-highest": "#273647",
+                        "secondary": "#bec6e0",
+                        "on-tertiary-fixed-variant": "#3a485c",
+                        "on-surface-variant": "#bccbb9",
+                        "on-background": "#d4e4fa",
+                        "inverse-primary": "#006e2f",
+                        "inverse-surface": "#d4e4fa",
+                        "error-container": "#93000a",
+                        "on-secondary-container": "#adb4ce",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "surface-container-lowest": "#010f1f",
+                        "on-primary": "#003915",
+                        "primary-fixed": "#6bff8f",
+                        "on-tertiary-container": "#334155",
+                        "on-secondary": "#283044",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-low": "#0d1c2d",
+                        "on-error": "#690005",
+                        "on-primary-fixed-variant": "#005321",
+                        "primary": "#4be277",
+                        "surface-dim": "#051424",
+                        "error": "#ffb4ab",
+                        "surface-bright": "#2c3a4c",
+                        "on-tertiary": "#233144",
+                        "surface-variant": "#273647",
+                        "primary-container": "#22c55e",
+                        "tertiary-container": "#9eadc5",
+                        "primary-fixed-dim": "#4ae176",
+                        "tertiary": "#bac8e1",
+                        "on-primary-fixed": "#002109",
+                        "on-surface": "#d4e4fa",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "tertiary-fixed-dim": "#b9c7e0",
+                        "surface-tint": "#4ae176",
+                        "on-tertiary-fixed": "#0d1c2f",
+                        "background": "#051424",
+                        "secondary-container": "#3f465c",
+                        "on-primary-container": "#004b1e",
+                        "on-secondary-fixed": "#131b2e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "sm": "8px",
+                        "container-margin": "20px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #020617; /* Custom deep slate base */
+            color: #d4e4fa; /* on-background */
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(30, 41, 59, 0.8);
+        }
+        .ai-glow {
+            box-shadow: inset 0 0 20px rgba(34, 197, 94, 0.15);
+        }
+        .macro-bar {
+            width: 4px;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            border-top-left-radius: 0.75rem;
+            border-bottom-left-radius: 0.75rem;
+            background: linear-gradient(to bottom, #22C55E, #0ea5e9, #f59e0b);
+        }
+        
+        /* Hide scrollbar for clean look */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col md:flex-row pb-24 md:pb-0">
+<!-- Screen 1: Meals Catalog (Left Column on Desktop, full width on Mobile) -->
+<main class="w-full md:w-1/2 flex-1 flex flex-col p-container-margin gap-lg border-r border-surface-variant/30">
+<!-- Header -->
+<header class="flex justify-between items-center w-full pt-md">
+<h1 class="text-headline-lg font-headline-lg text-on-background">Мої страви</h1>
+<button class="bg-primary-container text-on-primary-container px-4 py-2 rounded-full font-label-md flex items-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                Додати
+            </button>
+</header>
+<!-- Search Input -->
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border border-surface-variant rounded-xl py-3 pl-12 pr-4 text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-colors outline-none placeholder:text-on-surface-variant/50" placeholder="Пошук..." type="text">
+</div>
+<!-- Meals List (Bento-ish stack) -->
+<div class="flex flex-col gap-3 overflow-y-auto no-scrollbar pb-8">
+<div class="relative glass-panel bg-surface-container-low rounded-2xl p-md flex items-center justify-between group hover:bg-surface-container transition-all cursor-pointer border border-outline-variant/30">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-2xl">lunch_dining</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-body-md font-semibold text-on-surface">Помідори</h3>
+<div class="flex items-center gap-3 mt-1">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">local_fire_department</span>
+<span class="text-label-sm text-on-surface-variant">18</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">egg</span>
+<span class="text-label-sm text-on-surface-variant">1</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-yellow-500">bakery_dining</span>
+<span class="text-label-sm text-on-surface-variant">4</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-error">water_drop</span>
+<span class="text-label-sm text-on-surface-variant">0</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity px-2">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</div>
+<div class="relative glass-panel bg-surface-container-low rounded-2xl p-md flex items-center justify-between group hover:bg-surface-container transition-all cursor-pointer border border-outline-variant/30">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-2xl">fastfood</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-body-md font-semibold text-on-surface">Сендвіч з індичкою</h3>
+<div class="flex items-center gap-3 mt-1">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">local_fire_department</span>
+<span class="text-label-sm text-on-surface-variant">202</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">egg</span>
+<span class="text-label-sm text-on-surface-variant">9</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-yellow-500">bakery_dining</span>
+<span class="text-label-sm text-on-surface-variant">24</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-error">water_drop</span>
+<span class="text-label-sm text-on-surface-variant">8</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity px-2">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</div>
+<div class="relative glass-panel bg-surface-container-low rounded-2xl p-md flex items-center justify-between group hover:bg-surface-container transition-all cursor-pointer border border-outline-variant/30">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-2xl">egg</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-body-md font-semibold text-on-surface">Варене яйце</h3>
+<div class="flex items-center gap-3 mt-1">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">local_fire_department</span>
+<span class="text-label-sm text-on-surface-variant">155</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">egg</span>
+<span class="text-label-sm text-on-surface-variant">13</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-yellow-500">bakery_dining</span>
+<span class="text-label-sm text-on-surface-variant">1</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-error">water_drop</span>
+<span class="text-label-sm text-on-surface-variant">11</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity px-2">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</div>
+<div class="relative glass-panel bg-surface-container-low rounded-2xl p-md flex items-center justify-between group hover:bg-surface-container transition-all cursor-pointer border border-outline-variant/30">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden">
+<img alt="Healthy meal" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoqUXD03kOdEE147MHJcQMQe8zHxozdVPrIHLYDphkwX3h3Dv8MQCXKkDAi2ZhhhKmvEynLxZ7BAcmiw22-7Z6EQdXZDtQu9p-2c87ceQ6t4S2xN64DlE8U_ReGBo1xl2hoEsxMgwRqaJpGnPSJDmRcj69MloL0o6be9e_eazUyswaOqrqWBLofrpRqwgEbPUYDzSFyNxNmv3wBGGm8UlIpXTyR7bZwT0zyFXPxeEaS797Amsm4Q68qVcI5GtR4W_RX3iN-Pb-vQyQ">
+</div>
+<div class="flex flex-col">
+<h3 class="text-body-md font-semibold text-on-surface">Здоровий боул</h3>
+<div class="flex items-center gap-3 mt-1">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">local_fire_department</span>
+<span class="text-label-sm text-on-surface-variant">320</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">egg</span>
+<span class="text-label-sm text-on-surface-variant">12</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-yellow-500">bakery_dining</span>
+<span class="text-label-sm text-on-surface-variant">40</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-error">water_drop</span>
+<span class="text-label-sm text-on-surface-variant">15</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity px-2">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Screen 2: Weight Progress (Right Column on Desktop, hidden on Mobile unless active) -->
+<aside class="hidden md:flex w-1/2 flex-col p-container-margin gap-lg">
+<!-- Header -->
+<header class="flex justify-between items-center w-full pt-md">
+<div>
+<h1 class="text-headline-lg font-headline-lg text-on-background">Вага</h1>
+<p class="text-label-md font-label-md text-on-surface-variant mt-1">Слідкуйте за еволюцією тіла.</p>
+</div>
+<button class="bg-primary-container text-on-primary-container px-4 py-2 rounded-full font-label-md flex items-center gap-2 hover:opacity-90 transition-opacity shadow-[0_4px_14px_0_rgba(34,197,94,0.15)]">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                Записати
+            </button>
+</header>
+<!-- Chart Card (AI Insight style) -->
+<div class="glass-panel ai-glow rounded-xl p-lg relative overflow-hidden flex flex-col gap-6">
+<div class="flex justify-between items-start z-10">
+<div>
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Останній запис</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="text-display-lg font-headline-lg text-on-surface">95.8</span>
+<span class="text-body-md font-body-md text-on-surface-variant">kg</span>
+</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-1">16 Травня 2026 • 08:20</p>
+</div>
+<div class="bg-surface-container border border-primary/20 px-3 py-1 rounded-full flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[16px]">trending_down</span>
+<span class="text-label-md font-label-md">-3.2 kg</span>
+</div>
+</div>
+<!-- Mock Chart Area -->
+<div class="h-32 w-full relative z-10 mt-4 flex items-end">
+<!-- SVG path representing a sparkline -->
+<svg class="w-full h-full preserve-aspect-ratio-none" preserveAspectRatio="none" viewBox="0 0 400 100">
+<defs>
+<linearGradient id="chart-gradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#22C55E" stop-opacity="0.2"></stop>
+<stop offset="100%" stop-color="#22C55E" stop-opacity="0"></stop>
+</linearGradient>
+</defs>
+<path d="M0,20 L40,60 L80,50 L120,70 L160,80 L200,60 L240,40 L280,60 L320,80 L360,50 L400,60 L400,100 L0,100 Z" fill="url(#chart-gradient)"></path>
+<path d="M0,20 L40,60 L80,50 L120,70 L160,80 L200,60 L240,40 L280,60 L320,80 L360,50 L400,60" fill="none" stroke="#22C55E" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<!-- Points -->
+<circle cx="0" cy="20" fill="#020617" r="3" stroke="#22C55E" stroke-width="1.5"></circle>
+<circle cx="400" cy="60" fill="#020617" r="3" stroke="#22C55E" stroke-width="1.5"></circle>
+</svg>
+</div>
+<div class="flex justify-between items-center text-label-sm font-label-sm text-on-surface-variant z-10 mt-2">
+<span class="">94.5 kg</span>
+<div class="flex gap-2">
+<button class="bg-primary-container/20 text-primary px-3 py-1 rounded-full">30d</button>
+<button class="px-3 py-1 hover:text-on-surface transition-colors">90d</button>
+<button class="px-3 py-1 hover:text-on-surface transition-colors">1Y</button>
+</div>
+<span class="">99.0 kg</span>
+</div>
+</div>
+<!-- History List -->
+<div class="flex flex-col gap-3 mt-2 overflow-y-auto no-scrollbar">
+<h3 class="text-label-md font-headline-md text-on-surface-variant mb-2">Історія</h3>
+<!-- History Item 1 -->
+<div class="glass-panel rounded-xl p-md flex items-center justify-between group hover:bg-surface-container-highest transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">scale</span>
+</div>
+<div>
+<div class="flex items-baseline gap-1">
+<span class="text-body-md font-headline-md text-on-surface">95.8</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">kg</span>
+</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant">16 Травня 2026 • 08:20</p>
+</div>
+</div>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+<button class="p-2 text-on-surface-variant hover:text-error transition-colors"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+</div>
+</div>
+<!-- History Item 2 -->
+<div class="glass-panel rounded-xl p-md flex items-center justify-between group hover:bg-surface-container-highest transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">scale</span>
+</div>
+<div>
+<div class="flex items-baseline gap-1">
+<span class="text-body-md font-headline-md text-on-surface">96.1</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">kg</span>
+</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant">14 Травня 2026 • 08:37</p>
+</div>
+</div>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+<button class="p-2 text-on-surface-variant hover:text-error transition-colors"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+</div>
+</div>
+<!-- History Item 3 -->
+<div class="glass-panel rounded-xl p-md flex items-center justify-between group hover:bg-surface-container-highest transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">scale</span>
+</div>
+<div>
+<div class="flex items-baseline gap-1">
+<span class="text-body-md font-headline-md text-on-surface">95.5</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">kg</span>
+</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant">13 Травня 2026 • 08:29</p>
+</div>
+</div>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+<button class="p-2 text-on-surface-variant hover:text-error transition-colors"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+</div>
+</div>
+</div>
+</aside>
+<!-- BottomNavBar (Mobile Only) -->
+
+
+
+</body></html>

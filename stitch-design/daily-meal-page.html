@@ -1,0 +1,402 @@
+<!DOCTYPE html><html class="dark" lang="uk" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>NutriAI - Щоденник</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "tertiary-fixed": "#d5e3fd",
+                            "inverse-on-surface": "#233143",
+                            "surface-container": "#122131",
+                            "surface-container-high": "#1c2b3c",
+                            "surface": "#051424",
+                            "secondary-fixed": "#dae2fd",
+                            "outline": "#869585",
+                            "outline-variant": "#3d4a3d",
+                            "surface-container-highest": "#273647",
+                            "secondary": "#bec6e0",
+                            "on-tertiary-fixed-variant": "#3a485c",
+                            "on-surface-variant": "#bccbb9",
+                            "on-background": "#d4e4fa",
+                            "inverse-primary": "#006e2f",
+                            "inverse-surface": "#d4e4fa",
+                            "error-container": "#93000a",
+                            "on-secondary-container": "#adb4ce",
+                            "secondary-fixed-dim": "#bec6e0",
+                            "surface-container-lowest": "#010f1f",
+                            "on-primary": "#003915",
+                            "primary-fixed": "#6bff8f",
+                            "on-tertiary-container": "#334155",
+                            "on-secondary": "#283044",
+                            "on-error-container": "#ffdad6",
+                            "surface-container-low": "#0d1c2d",
+                            "on-error": "#690005",
+                            "on-primary-fixed-variant": "#005321",
+                            "primary": "#4be277",
+                            "surface-dim": "#051424",
+                            "error": "#ffb4ab",
+                            "surface-bright": "#2c3a4c",
+                            "on-tertiary": "#233144",
+                            "surface-variant": "#273647",
+                            "primary-container": "#22c55e",
+                            "tertiary-container": "#9eadc5",
+                            "primary-fixed-dim": "#4ae176",
+                            "tertiary": "#bac8e1",
+                            "on-primary-fixed": "#002109",
+                            "on-surface": "#d4e4fa",
+                            "on-secondary-fixed-variant": "#3f465c",
+                            "tertiary-fixed-dim": "#b9c7e0",
+                            "surface-tint": "#4ae176",
+                            "on-tertiary-fixed": "#0d1c2f",
+                            "background": "#051424",
+                            "secondary-container": "#3f465c",
+                            "on-primary-container": "#004b1e",
+                            "on-secondary-fixed": "#131b2e"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.25rem",
+                            "lg": "0.5rem",
+                            "xl": "0.75rem",
+                            "full": "9999px"
+                    },
+                    "spacing": {
+                            "unit": "4px",
+                            "sm": "8px",
+                            "container-margin": "20px",
+                            "xl": "32px",
+                            "md": "16px",
+                            "xs": "4px",
+                            "lg": "24px",
+                            "gutter": "16px"
+                    },
+                    "fontFamily": {
+                            "headline-lg": ["Inter"],
+                            "body-md": ["Inter"],
+                            "headline-md": ["Inter"],
+                            "label-sm": ["Inter"],
+                            "headline-lg-mobile": ["Inter"],
+                            "label-md": ["Inter"],
+                            "body-lg": ["Inter"],
+                            "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                            "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                            "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                            "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                            "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                            "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                            "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                            "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                            "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .fill-icon {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Custom scrollbar to hide it but keep functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(30, 41, 59, 0.8);
+        }
+
+        .ai-glow {
+            box-shadow: inset 0 0 20px rgba(34, 197, 94, 0.15);
+            animation: pulse-glow 3s infinite alternate;
+        }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: inset 0 0 10px rgba(34, 197, 94, 0.1); }
+            100% { box-shadow: inset 0 0 30px rgba(34, 197, 94, 0.3); }
+        }
+        
+        .macro-bar-p { background: linear-gradient(180deg, rgba(34,197,94,1) 0%, rgba(34,197,94,0.5) 100%); }
+        .macro-bar-c { background: linear-gradient(180deg, rgba(234,179,8,1) 0%, rgba(234,179,8,0.5) 100%); }
+        .macro-bar-g { background: linear-gradient(180deg, rgba(239,68,68,1) 0%, rgba(239,68,68,0.5) 100%); }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased pb-24">
+<!-- TopAppBar -->
+<header class="bg-background flex justify-between items-center w-full px-container-margin py-md sticky top-0 z-40">
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+</button>
+<div class="flex flex-col items-center">
+<h1 class="text-headline-md font-headline-md font-bold text-on-background">Сьогодні</h1>
+<span class="text-label-sm font-label-sm text-on-surface-variant mt-1">2026-05-23</span>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</header>
+<!-- Date Navigation Carousel -->
+<div class="px-container-margin mb-6">
+<div class="flex space-x-3 overflow-x-auto no-scrollbar pb-2">
+<!-- Past Days -->
+<div class="flex-shrink-0 w-14 h-16 rounded-xl bg-surface-container-high border border-outline-variant flex flex-col items-center justify-center opacity-60">
+<span class="text-label-sm font-label-sm text-on-surface-variant">пн</span>
+<span class="text-body-lg font-headline-md font-bold text-on-background">18</span>
+</div>
+<div class="flex-shrink-0 w-14 h-16 rounded-xl bg-surface-container-high border border-outline-variant flex flex-col items-center justify-center opacity-60">
+<span class="text-label-sm font-label-sm text-on-surface-variant">вт</span>
+<span class="text-body-lg font-headline-md font-bold text-on-background">19</span>
+</div>
+<div class="flex-shrink-0 w-14 h-16 rounded-xl bg-surface-container-high border border-outline-variant flex flex-col items-center justify-center opacity-60">
+<span class="text-label-sm font-label-sm text-on-surface-variant">ср</span>
+<span class="text-body-lg font-headline-md font-bold text-on-background">20</span>
+</div>
+<div class="flex-shrink-0 w-14 h-16 rounded-xl bg-surface-container-high border border-outline-variant flex flex-col items-center justify-center opacity-60">
+<span class="text-label-sm font-label-sm text-on-surface-variant">чт</span>
+<span class="text-body-lg font-headline-md font-bold text-on-background">21</span>
+</div>
+<div class="flex-shrink-0 w-14 h-16 rounded-xl bg-surface-container-high border border-outline-variant flex flex-col items-center justify-center opacity-60">
+<span class="text-label-sm font-label-sm text-on-surface-variant">пт</span>
+<span class="text-body-lg font-headline-md font-bold text-on-background">22</span>
+</div>
+<!-- Active Day -->
+<div class="flex-shrink-0 w-14 h-16 rounded-xl bg-primary text-on-primary flex flex-col items-center justify-center shadow-[0_4px_12px_rgba(34,197,94,0.3)]">
+<span class="text-label-sm font-label-sm">сб</span>
+<span class="text-body-lg font-headline-md font-bold">23</span>
+<div class="w-1 h-1 rounded-full bg-on-primary mt-1"></div>
+</div>
+<!-- Future Days -->
+<div class="flex-shrink-0 w-14 h-16 rounded-xl bg-surface-container-high border border-outline-variant flex flex-col items-center justify-center">
+<span class="text-label-sm font-label-sm text-on-surface-variant">нд</span>
+<span class="text-body-lg font-headline-md font-bold text-on-background">24</span>
+</div>
+<div class="flex-shrink-0 w-14 h-16 rounded-xl bg-surface-container-high border border-outline-variant flex flex-col items-center justify-center">
+<span class="text-label-sm font-label-sm text-on-surface-variant">пн</span>
+<span class="text-body-lg font-headline-md font-bold text-on-background">25</span>
+</div>
+<div class="flex-shrink-0 w-14 h-16 rounded-xl bg-surface-container-high border border-outline-variant flex flex-col items-center justify-center">
+<span class="text-label-sm font-label-sm text-on-surface-variant">вт</span>
+<span class="text-body-lg font-headline-md font-bold text-on-background">26</span>
+</div>
+</div>
+<!-- Progress Bar Indicator -->
+<div class="w-full h-2 bg-surface-container-highest rounded-full mt-3 overflow-hidden">
+<div class="h-full bg-primary-container w-[65%] rounded-full opacity-70"></div>
+</div>
+</div>
+<!-- Main Content Container -->
+<main class="px-container-margin flex flex-col gap-y-[12px]">
+<!-- Daily Summary Glass Card -->
+<section class="glass-card rounded-xl p-md ai-glow relative overflow-hidden">
+<div class="flex justify-between items-end mb-6">
+<div><h2 class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider mb-2">Всього за день</h2><div class="flex items-center gap-3"><div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center"><span class="material-symbols-outlined text-primary text-3xl" data-icon="local_fire_department">local_fire_department</span></div><div class="flex flex-col"><span class="text-[40px] leading-none font-bold text-on-background">1573</span><span class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wide">ккал</span></div></div></div>
+<!-- AI Insight Icon -->
+<div class="w-10 h-10 rounded-full flex items-center justify-center bg-surface-bright -mt-2 -mr-2">
+<span class="material-symbols-outlined text-primary" data-icon="sparkles">chat_bubble</span>
+</div>
+</div>
+<!-- Macros -->
+<div class="grid grid-cols-3 gap-3">
+<div class="bg-surface-container-high rounded-lg p-3 relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 macro-bar-p"></div>
+<div class="pl-2 flex flex-col items-center"><div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-primary text-[20px] mb-1">egg_alt</span>
+<span class="text-body-md font-headline-md font-bold text-[#4be277]">144g</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant mt-1">Білки</span>
+</div></div>
+</div>
+<div class="bg-surface-container-high rounded-lg p-3 relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 macro-bar-c"></div>
+<div class="pl-2 flex flex-col items-center"><div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-yellow-500 text-[20px] mb-1">bakery_dining</span>
+<span class="text-body-md font-headline-md font-bold text-[#eab308]">82g</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant mt-1">Вуглев</span>
+</div></div>
+</div>
+<div class="bg-surface-container-high rounded-lg p-3 relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 macro-bar-g"></div>
+<div class="pl-2 flex flex-col items-center"><div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-red-500 text-[20px] mb-1">opacity</span>
+<span class="text-body-md font-headline-md font-bold text-[#ef4444]">75g</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant mt-1">Жири</span>
+</div></div>
+</div>
+</div>
+</section>
+<!-- Meal: Сніданок -->
+<section class="bg-surface rounded-xl border border-outline-variant overflow-hidden">
+<div class="p-md flex justify-between items-center bg-surface-container-low border-b border-outline-variant/30">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="local_cafe">local_cafe</span>
+</div>
+<div>
+<h3 class="text-body-md font-headline-md font-bold text-on-background">Сніданок</h3>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-0.5"></p><div class="flex items-baseline gap-1 mt-0.5"><span class="material-symbols-outlined text-[14px] text-primary" data-icon="local_fire_department">local_fire_department</span><span class="text-label-md font-bold text-on-background">201.5</span></div><p></p>
+</div>
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-full text-label-md font-label-md font-bold flex items-center gap-1 hover:opacity-90 transition-opacity shadow-[0_2px_8px_rgba(34,197,94,0.2)]">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+                    Додати
+                </button>
+</div>
+<div class="p-2 flex flex-col gap-1">
+<!-- Entry -->
+<div class="flex items-center justify-between p-3 bg-surface-container-low rounded-lg group">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant/50">
+<span class="material-symbols-outlined text-[16px]" data-icon="restaurant_menu">restaurant_menu</span>
+</div>
+<div><p class="text-body-md font-body-md text-on-background line-clamp-1">Turkey and boiled egg sandwich</p><div class="flex flex-wrap gap-x-3 gap-y-1 mt-1"><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-primary" data-icon="local_fire_department">local_fire_department</span><span class="text-label-sm font-bold text-on-background">18</span></div><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-primary" data-icon="egg_alt">egg_alt</span><span class="text-label-sm font-bold text-[#4be277]">24g</span></div><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-[#eab308]" data-icon="bakery_dining">bakery_dining</span><span class="text-label-sm font-bold text-[#eab308]">32g</span></div><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-[#ef4444]" data-icon="opacity">opacity</span><span class="text-label-sm font-bold text-[#ef4444]">15g</span></div></div></div>
+</div>
+<div class="flex gap-2 opacity-50">
+<button class="p-1 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span></button>
+<button class="p-1 hover:text-error transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="delete">delete</span></button>
+</div>
+</div>
+</div>
+</section>
+<!-- Meal: Обід -->
+<section class="bg-surface rounded-xl border border-outline-variant overflow-hidden">
+<div class="p-md flex justify-between items-center bg-surface-container-low border-b border-outline-variant/30">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="restaurant">restaurant</span>
+</div>
+<div>
+<h3 class="text-body-md font-headline-md font-bold text-on-background">Обід</h3>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-0.5"></p><div class="flex items-baseline gap-1 mt-0.5"><span class="material-symbols-outlined text-[14px] text-primary" data-icon="local_fire_department">local_fire_department</span><span class="text-label-md font-bold text-on-background">373.7</span></div><p></p>
+</div>
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-full text-label-md font-label-md font-bold flex items-center gap-1 hover:opacity-90 transition-opacity shadow-[0_2px_8px_rgba(34,197,94,0.2)]">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+                    Додати
+                </button>
+</div>
+<div class="p-2 flex flex-col gap-1">
+<!-- Entry -->
+<div class="flex items-center justify-between p-3 bg-surface-container-low rounded-lg group">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant/50">
+<span class="material-symbols-outlined text-[16px]" data-icon="lunch_dining">lunch_dining</span>
+</div>
+<div><p class="text-body-md font-body-md text-on-background">Помідорки чері</p><div class="flex flex-wrap gap-x-3 gap-y-1 mt-1"><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-primary" data-icon="local_fire_department">local_fire_department</span><span class="text-label-sm font-bold text-on-background">18</span></div><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-primary" data-icon="egg_alt">egg_alt</span><span class="text-label-sm font-bold text-[#4be277]">0.9g</span></div><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-[#eab308]" data-icon="bakery_dining">bakery_dining</span><span class="text-label-sm font-bold text-[#eab308]">3.9g</span></div><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-[#ef4444]" data-icon="opacity">opacity</span><span class="text-label-sm font-bold text-[#ef4444]">0.2g</span></div></div></div>
+</div>
+<div class="flex gap-2 opacity-50">
+<button class="p-1 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span></button>
+<button class="p-1 hover:text-error transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="delete">delete</span></button>
+</div>
+</div>
+</div>
+</section>
+<!-- Meal: Перекус -->
+<section class="bg-surface rounded-xl border border-outline-variant overflow-hidden">
+<div class="p-md flex justify-between items-center bg-surface-container-low border-b border-outline-variant/30">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="cookie">cookie</span>
+</div>
+<div>
+<h3 class="text-body-md font-headline-md font-bold text-on-background">Перекус</h3>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-0.5"></p><div class="flex items-baseline gap-1 mt-0.5"><span class="material-symbols-outlined text-[14px] text-primary" data-icon="local_fire_department">local_fire_department</span><span class="text-label-md font-bold text-on-background">154</span></div><p></p>
+</div>
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-full text-label-md font-label-md font-bold flex items-center gap-1 hover:opacity-90 transition-opacity shadow-[0_2px_8px_rgba(34,197,94,0.2)]">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+                    Додати
+                </button>
+</div>
+<div class="p-2 flex flex-col gap-1">
+<!-- Entry 1 -->
+<div class="flex items-center justify-between p-3 bg-surface-container-low rounded-lg group">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant/50">
+<span class="material-symbols-outlined text-[16px]" data-icon="eco">eco</span>
+</div>
+<div>
+<p class="text-body-md font-body-md text-on-background">Помідорки чері</p>
+<div class="flex flex-wrap gap-x-3 gap-y-1 mt-1"><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-primary" data-icon="local_fire_department">local_fire_department</span><span class="text-label-sm font-bold text-on-background">18</span></div><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-primary" data-icon="egg_alt">egg_alt</span><span class="text-label-sm font-bold text-[#4be277]">0.9g</span></div><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-[#eab308]" data-icon="bakery_dining">bakery_dining</span><span class="text-label-sm font-bold text-[#eab308]">3.9g</span></div><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-[#ef4444]" data-icon="opacity">opacity</span><span class="text-label-sm font-bold text-[#ef4444]">0.2g</span></div></div>
+</div>
+</div>
+<div class="flex gap-2 opacity-50">
+<button class="p-1 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span></button>
+<button class="p-1 hover:text-error transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="delete">delete</span></button>
+</div>
+</div>
+<!-- Entry 2 -->
+<div class="flex items-center justify-between p-3 bg-surface-container-low rounded-lg group">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant/50">
+<span class="material-symbols-outlined text-[16px]" data-icon="icecream">icecream</span>
+</div>
+<div>
+<p class="text-body-md font-body-md text-on-background">Queso quark high protein</p>
+<div class="flex items-baseline gap-1 mt-0.5"><span class="material-symbols-outlined text-[14px] text-primary" data-icon="local_fire_department">local_fire_department</span><span class="text-label-md font-bold text-on-background">136</span></div>
+</div>
+</div>
+<div class="flex gap-2 opacity-50">
+<button class="p-1 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span></button>
+<button class="p-1 hover:text-error transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="delete">delete</span></button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Floating AI Action Button -->
+<div class="fixed bottom-24 right-container-margin z-50">
+<button class="w-16 h-16 rounded-full bg-primary text-on-primary shadow-[0_0_20px_rgba(75,226,119,0.3)] flex items-center justify-center hover:scale-105 transition-transform duration-300 relative border border-primary/50">
+<div class="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping opacity-25"></div>
+<span class="material-symbols-outlined text-[32px]" data-icon="mic" data-weight="fill">mic</span>
+</button>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center py-sm bg-surface-container/90 backdrop-blur-xl border-t border-outline-variant/20 hidden md:hidden flex">
+<!-- Active Tab: Hoy (Mapped to 'Щоденник' concept) -->
+<a class="text-primary flex flex-col items-center justify-center gap-xs scale-95 duration-150" href="#">
+<span class="material-symbols-outlined fill-icon" data-icon="calendar_today">calendar_today</span>
+<span class="text-label-sm font-label-sm">Hoy</span>
+</a>
+<a class="text-on-surface-variant flex flex-col items-center justify-center gap-xs hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="fastfood">fastfood</span>
+<span class="text-label-sm font-label-sm">Comidas</span>
+</a>
+<a class="text-on-surface-variant flex flex-col items-center justify-center gap-xs hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="scale">scale</span>
+<span class="text-label-sm font-label-sm">Peso</span>
+</a>
+<a class="text-on-surface-variant flex flex-col items-center justify-center gap-xs hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="text-label-sm font-label-sm">Perfil</span>
+</a>
+</nav>
+<!-- TopAppBar for Desktop (Hidden on Mobile) - simplified nav cluster representation -->
+<nav class="hidden md:flex fixed top-0 left-0 w-full z-50 bg-surface-container/90 backdrop-blur-xl justify-between items-center px-xl py-md">
+<div class="text-headline-md font-headline-md font-bold text-primary">NutriAI</div>
+<div class="flex gap-lg">
+<a class="text-primary font-label-md flex items-center gap-2" href="#"><span class="material-symbols-outlined fill-icon" data-icon="calendar_today">calendar_today</span> Hoy</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md flex items-center gap-2" href="#"><span class="material-symbols-outlined" data-icon="fastfood">fastfood</span> Comidas</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md flex items-center gap-2" href="#"><span class="material-symbols-outlined" data-icon="scale">scale</span> Peso</a>
+</div>
+<a class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2" href="#"><span class="material-symbols-outlined" data-icon="person">person</span></a>
+</nav>
+
+
+</body></html>

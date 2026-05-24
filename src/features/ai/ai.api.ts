@@ -38,6 +38,28 @@ export interface EstimateResult {
   provider?: string;
 }
 
+export interface AnalyzeMealItem {
+  name: string;
+  weightG: number;
+  kcal: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+  confidence?: number;
+}
+
+export interface AnalyzeMealResult {
+  items: AnalyzeMealItem[];
+  totalKcal: number;
+  totalProteinG: number;
+  totalCarbsG: number;
+  totalFatG: number;
+  confidence?: number;
+  notes?: string;
+  modelUsed?: string;
+  provider?: string;
+}
+
 export const listAiModels = () => api<AiModelDto[]>(`/ai/models`);
 
 export const updateAiPreference = (body: {
@@ -72,6 +94,33 @@ export async function estimateNutrition(input: {
     throw new Error(`AI estimate failed (${res.status}): ${txt}`);
   }
   return (await res.json()) as EstimateResult;
+}
+
+/**
+ * Analiza una foto de plato y devuelve TODOS los items detectados con macros.
+ * Pensado para autocompletar el formulario con varios entries de una sola vez.
+ */
+export async function analyzeMealPhoto(input: {
+  image: File;
+  locale?: string;
+  hint?: string;
+}): Promise<AnalyzeMealResult> {
+  const token = useAuthStore.getState().accessToken;
+  const fd = new FormData();
+  fd.append('file', input.image);
+  if (input.locale) fd.append('locale', input.locale);
+  if (input.hint) fd.append('hint', input.hint);
+  const res = await fetch(`${env.apiBaseUrl}/ai/analyze-meal-photo`, {
+    method: 'POST',
+    body: fd,
+    credentials: 'include',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`AI analyze-meal-photo failed (${res.status}): ${txt}`);
+  }
+  return (await res.json()) as AnalyzeMealResult;
 }
 
 // ---- Admin ----

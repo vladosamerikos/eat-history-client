@@ -1,5 +1,5 @@
 {
-  "common": { "cancel": "Cancel", "save": "Save", "close": "Close", "back": "Back", "loading": "Loading…", "empty": "No results.", "remove": "Remove", "edit": "Edit", "notes": "Notes", "confirm": "Confirm", "delete": "Delete", "deleteConfirmTitle": "Delete?", "deleteConfirmDesc": "This action cannot be undone.", "saved": "Saved", "errorGeneric": "Something went wrong. Please try again." },
+  "common": { "cancel": "Cancel", "save": "Save", "close": "Close", "back": "Back", "loading": "Loading…", "empty": "No results.", "remove": "Remove", "edit": "Edit", "notes": "Notes", "confirm": "Confirm", "delete": "Delete", "deleteConfirmTitle": "Delete?", "deleteConfirmDesc": "This action cannot be undone.", "saved": "Saved", "errorGeneric": "Something went wrong. Please try again.", "send": "Send", "clear": "Clear" },
   "welcome": {
     "greeting": "Welcome",
     "tagline": "Your nutrition, your story.",
@@ -303,7 +303,7 @@
     "tomorrow": "Tomorrow",
     "swipeHint": "Swipe to change day",
     "types": { "breakfast": "Breakfast", "lunch": "Lunch", "snack": "Snack", "dinner": "Dinner" },
-    "photo": { "add": "Add photo", "change": "Change photo", "remove": "Remove photo", "uploading": "Uploading photo…", "generalHint": "Photo of the whole plate (optional)" },
+    "photo": { "add": "Add photo", "change": "Change photo", "remove": "Remove photo", "uploading": "Uploading photo…", "generalHint": "Photo of the whole plate (optional)", "takeOrUpload": "Add photo", "takePhoto": "Take photo", "uploadFromGallery": "Upload from gallery" },
     "edit": "Edit",
     "saveEdit": "Save changes",
     "addItem": "Add item",
@@ -316,12 +316,29 @@
     "errors": { "noEntries": "Add at least one item.", "noName": "Add a name first." },
     "saveAsFood": "Save to my catalog",
     "savedAsFood": "“{{name}}” saved to your catalog",
-    "deleteConfirm": "Delete this meal?"
+    "deleteConfirm": "Delete this meal?",
+    "analyzePhoto": "Analyze",
+    "analyzingPhoto": "Analyzing with AI…",
+    "confirmOverwriteTitle": "Overwrite data?",
+    "confirmOverwrite": "There is already information entered. Replace it with the AI analysis?",
+    "useCustom": "Use “{{name}}” as a custom entry",
+    "itemLabel": "Item",
+    "aiPhotoTitle": "AI photo analysis",
+    "addMealCta": "Add meal",
+    "macros": { "kcal": "Kcal", "protein": "Protein", "carbs": "Carbs", "fat": "Fat" }
   },
   "voice": {
     "title": "Voice assistant",
     "openAria": "Open voice assistant",
     "close": "Close",
+    "minimize": "Minimize",
+    "restore": "Restore assistant",
+    "voiceMode": "Voice",
+    "chatMode": "Chat",
+    "typeMessage": "Type a message…",
+    "sendDisabledSpeaking": "Wait for the agent to finish…",
+    "chatHint": "Talk or type to begin.",
+    "mutedHint": "Microphone muted",
     "connecting": "Connecting…",
     "listening": "Listening…",
     "agentSpeaking": "Speaking…",
@@ -329,11 +346,15 @@
     "error": "Failed to connect to the assistant.",
     "mute": "Mute",
     "unmute": "Unmute",
-    "end": "End"
+    "end": "End",
+    "photoSent": "📷 Photo attached",
+    "photoAnnounce": "I attached a photo of my meal. Analyze it and log it: {{url}}"
   },
   "foods": {
     "title": "My foods",
     "add": "Add",
+    "addTitle": "Add food",
+    "editTitle": "Edit food",
     "cancel": "Cancel",
     "save": "Save",
     "saveEdit": "Save changes",

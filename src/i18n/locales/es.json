@@ -1,5 +1,5 @@
 {
-  "common": { "cancel": "Cancelar", "save": "Guardar", "close": "Cerrar", "back": "Volver", "loading": "Cargando…", "empty": "Sin resultados.", "remove": "Quitar", "edit": "Editar", "notes": "Notas", "confirm": "Confirmar", "delete": "Eliminar", "deleteConfirmTitle": "¿Eliminar?", "deleteConfirmDesc": "Esta acción no se puede deshacer.", "saved": "Guardado", "errorGeneric": "Algo falló. Inténtalo de nuevo." },
+  "common": { "cancel": "Cancelar", "save": "Guardar", "close": "Cerrar", "back": "Volver", "loading": "Cargando…", "empty": "Sin resultados.", "remove": "Quitar", "edit": "Editar", "notes": "Notas", "confirm": "Confirmar", "delete": "Eliminar", "deleteConfirmTitle": "¿Eliminar?", "deleteConfirmDesc": "Esta acción no se puede deshacer.", "saved": "Guardado", "errorGeneric": "Algo falló. Inténtalo de nuevo.", "send": "Enviar", "clear": "Limpiar" },
   "welcome": {
     "greeting": "Bienvenido",
     "tagline": "Tu nutrición, tu historia.",
@@ -304,7 +304,7 @@
     "tomorrow": "Mañana",
     "swipeHint": "Desliza para cambiar de día",
     "types": { "breakfast": "Desayuno", "lunch": "Comida", "snack": "Merienda", "dinner": "Cena" },
-    "photo": { "add": "Añadir foto", "change": "Cambiar foto", "remove": "Quitar foto", "uploading": "Subiendo foto…", "generalHint": "Foto del plato completo (opcional)" },
+    "photo": { "add": "Añadir foto", "change": "Cambiar foto", "remove": "Quitar foto", "uploading": "Subiendo foto…", "generalHint": "Foto del plato completo (opcional)", "takeOrUpload": "Añadir foto", "takePhoto": "Tomar foto", "uploadFromGallery": "Subir desde galería" },
     "edit": "Editar",
     "saveEdit": "Guardar cambios",
     "addItem": "Añadir producto",
@@ -317,12 +317,29 @@
     "errors": { "noEntries": "Añade al menos un producto.", "noName": "Añade un nombre primero." },
     "saveAsFood": "Guardar en mi catálogo",
     "savedAsFood": "“{{name}}” guardado en tu catálogo",
-    "deleteConfirm": "¿Eliminar esta comida?"
+    "deleteConfirm": "¿Eliminar esta comida?",
+    "analyzePhoto": "Analizar",
+    "analyzingPhoto": "Analizando con IA…",
+    "confirmOverwriteTitle": "¿Sobrescribir datos?",
+    "confirmOverwrite": "Ya hay información introducida. ¿Reemplazar con el análisis IA?",
+    "useCustom": "Usar “{{name}}” como entrada personalizada",
+    "itemLabel": "Plato",
+    "aiPhotoTitle": "Análisis IA por foto",
+    "addMealCta": "Añadir comida",
+    "macros": { "kcal": "Kcal", "protein": "Proteína", "carbs": "Carbs", "fat": "Grasa" }
   },
   "voice": {
     "title": "Asistente de voz",
     "openAria": "Abrir asistente de voz",
     "close": "Cerrar",
+    "minimize": "Minimizar",
+    "restore": "Restaurar asistente",
+    "voiceMode": "Voz",
+    "chatMode": "Chat",
+    "typeMessage": "Escribe un mensaje…",
+    "sendDisabledSpeaking": "Espera a que termine de hablar…",
+    "chatHint": "Habla o escribe para empezar.",
+    "mutedHint": "Micrófono silenciado",
     "connecting": "Conectando…",
     "listening": "Te escucho…",
     "agentSpeaking": "Hablando…",
@@ -330,11 +347,15 @@
     "error": "Error al conectar con el asistente.",
     "mute": "Silenciar",
     "unmute": "Activar micrófono",
-    "end": "Finalizar"
+    "end": "Finalizar",
+    "photoSent": "📷 Foto adjuntada",
+    "photoAnnounce": "He adjuntado una foto de mi plato. Analízala y regístrala: {{url}}"
   },
   "foods": {
     "title": "Mis comidas",
     "add": "Añadir",
+    "addTitle": "Añadir comida",
+    "editTitle": "Editar comida",
     "cancel": "Cancelar",
     "save": "Guardar",
     "saveEdit": "Guardar cambios",

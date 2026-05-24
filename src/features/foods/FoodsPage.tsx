@@ -1,7 +1,20 @@
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Camera, Loader2, Pencil, Sparkles, Trash2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import {
+  Camera,
+  Croissant,
+  Droplet,
+  Egg,
+  Flame,
+  Loader2,
+  Pencil,
+  Scale,
+  Sparkles,
+  Trash2,
+  X,
+} from 'lucide-react';
 import {
   createFood,
   deleteFood,
@@ -165,10 +178,10 @@ export function FoodsPage() {
         <h2 className="text-xl font-semibold">{t('foods.title')}</h2>
         <button
           type="button"
-          onClick={() => (showForm ? resetForm() : setShowForm(true))}
+          onClick={() => setShowForm(true)}
           className="h-10 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90"
         >
-          {showForm ? t('foods.cancel') : `+ ${t('foods.add')}`}
+          + {t('foods.add')}
         </button>
       </header>
 
@@ -181,109 +194,204 @@ export function FoodsPage() {
       />
 
       {showForm && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!form.name.trim()) return;
-            saveMut.mutate();
+        <div
+          className="fixed inset-0 z-50 flex bg-black/60 backdrop-blur-sm sm:items-center sm:justify-center sm:p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) resetForm();
           }}
-          className="mb-4 grid gap-2 rounded-2xl border border-border p-4"
         >
-          <input
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder={t('foods.fields.name') ?? 'Name'}
-            required
-            className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
-          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+            className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-surface shadow-2xl sm:h-auto sm:max-h-[92dvh] sm:max-w-md sm:rounded-2xl sm:border sm:border-outline-variant"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <header className="sticky top-0 z-10 flex items-center justify-between gap-2 bg-surface/95 px-5 py-4 backdrop-blur-md">
+              <button
+                type="button"
+                onClick={resetForm}
+                className="grid h-10 w-10 place-items-center rounded-full border border-surface-variant bg-surface-container text-on-surface-variant transition-colors hover:text-primary"
+                aria-label={t('common.close') ?? 'Close'}
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <h1 className="text-lg font-bold text-on-background">
+                {editingId ? t('foods.editTitle') : t('foods.addTitle')}
+              </h1>
+              <div className="w-10" />
+            </header>
 
-          <p className="-mt-1 text-[11px] text-muted-foreground">
-            {t('foods.per100Hint') ?? 'Los macros son por 100g. La porción se usa solo como cantidad por defecto al registrar.'}
-          </p>
-
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-            <NumField label={t('foods.fields.kcal100')} value={form.kcal} onChange={(v) => setForm({ ...form, kcal: v })} />
-            <NumField label={t('foods.fields.protein')} value={form.protein} onChange={(v) => setForm({ ...form, protein: v })} />
-            <NumField label={t('foods.fields.carbs')} value={form.carbs} onChange={(v) => setForm({ ...form, carbs: v })} />
-            <NumField label={t('foods.fields.fat')} value={form.fat} onChange={(v) => setForm({ ...form, fat: v })} />
-            <NumField label={t('foods.fields.portion')} value={form.defaultPortionG} onChange={(v) => setForm({ ...form, defaultPortionG: v })} />
-          </div>
-
-          {/* Foto */}
-          <div className="flex items-center gap-3">
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) setPhotoFile(f);
+            <form
+              id="food-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!form.name.trim()) return;
+                saveMut.mutate();
               }}
-            />
-            {previewPhoto ? (
-              <div className="relative">
-                <img src={previewPhoto} alt="" className="h-14 w-14 rounded-lg object-cover" />
+              className="flex-1 space-y-4 overflow-y-auto px-5 pb-32 pt-2"
+            >
+              {error && <Alert variant="error">{error}</Alert>}
+
+              {/* Photo card */}
+              {previewPhoto ? (
+                <div className="ai-glow relative overflow-hidden rounded-xl">
+                  <img src={previewPhoto} alt="" className="aspect-video w-full object-cover" />
+                  <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-gradient-to-t from-black/80 to-transparent p-3">
+                    <button
+                      type="button"
+                      onClick={() => fileRef.current?.click()}
+                      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-surface-container/90 px-3 text-xs font-semibold text-on-surface backdrop-blur hover:bg-surface-container-high"
+                    >
+                      <Camera className="h-3.5 w-3.5" />
+                      {t('foods.photo.change')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPhotoFile(null);
+                        setPhotoExistingUrl(undefined);
+                        if (fileRef.current) fileRef.current.value = '';
+                      }}
+                      className="grid h-9 w-9 place-items-center rounded-full bg-surface-container/90 text-on-surface backdrop-blur hover:bg-surface-container-high"
+                      aria-label={t('foods.photo.remove') ?? 'Remove'}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
                 <button
                   type="button"
-                  onClick={() => {
-                    setPhotoFile(null);
-                    setPhotoExistingUrl(undefined);
-                    if (fileRef.current) fileRef.current.value = '';
-                  }}
-                  className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-destructive text-xs text-white"
-                  aria-label={t('foods.photo.remove')}
+                  onClick={() => fileRef.current?.click()}
+                  className="ai-glow group glass-panel relative flex h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-xl p-4"
                 >
-                  ×
+                  <div className="z-10 grid h-12 w-12 place-items-center rounded-full bg-surface-container transition-transform group-hover:scale-105">
+                    <Camera className="h-5 w-5 text-primary" />
+                  </div>
+                  <span className="z-10 text-sm font-semibold text-primary">
+                    {t('foods.photo.add') ?? 'Add photo'}
+                  </span>
+                </button>
+              )}
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) setPhotoFile(f);
+                }}
+              />
+
+              {/* Name + macros card */}
+              <div className="space-y-5 rounded-xl border border-surface-variant bg-surface-container-low p-5">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+                    {t('foods.fields.name')}
+                  </label>
+                  <input
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder={t('foods.fields.name') ?? 'Name'}
+                    required
+                    className="h-10 rounded-lg border border-surface-variant bg-surface-container-low px-3 text-sm text-on-background focus:border-primary focus:outline-none"
+                  />
+                </div>
+
+                <p className="text-[11px] text-on-surface-variant">
+                  {t('foods.per100Hint')}
+                </p>
+
+                {/* AI pills */}
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    disabled={aiBusy !== null || !form.name.trim()}
+                    onClick={() => aiFill('name')}
+                    title={!form.name.trim() ? (t('foods.ai.needsName') ?? '') : undefined}
+                    className="inline-flex h-8 items-center gap-1 rounded-full bg-primary/10 px-3 text-[11px] font-semibold text-primary hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {aiBusy === 'name' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                    {t('foods.ai.fromName')}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={aiBusy !== null || !photoFile}
+                    onClick={() => aiFill('photo')}
+                    title={!photoFile ? (t('foods.ai.needsPhoto') ?? '') : undefined}
+                    className="inline-flex h-8 items-center gap-1 rounded-full bg-primary/10 px-3 text-[11px] font-semibold text-primary hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {aiBusy === 'photo' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                    {t('foods.ai.fromPhoto')}
+                  </button>
+                </div>
+
+                {/* Macros rows */}
+                <div className="flex flex-col gap-3">
+                  <MacroNumRow
+                    icon={Flame}
+                    iconClass="text-on-surface-variant"
+                    label={t('foods.fields.kcal100')}
+                    value={form.kcal}
+                    onChange={(v) => setForm({ ...form, kcal: v })}
+                  />
+                  <MacroNumRow
+                    icon={Egg}
+                    iconClass="text-primary"
+                    label={t('foods.fields.protein')}
+                    value={form.protein}
+                    onChange={(v) => setForm({ ...form, protein: v })}
+                  />
+                  <MacroNumRow
+                    icon={Croissant}
+                    iconClass="text-yellow-500"
+                    label={t('foods.fields.carbs')}
+                    value={form.carbs}
+                    onChange={(v) => setForm({ ...form, carbs: v })}
+                  />
+                  <MacroNumRow
+                    icon={Droplet}
+                    iconClass="text-red-500"
+                    label={t('foods.fields.fat')}
+                    value={form.fat}
+                    onChange={(v) => setForm({ ...form, fat: v })}
+                  />
+                  <MacroNumRow
+                    icon={Scale}
+                    iconClass="text-on-surface-variant"
+                    label={t('foods.fields.portion')}
+                    value={form.defaultPortionG}
+                    onChange={(v) => setForm({ ...form, defaultPortionG: v })}
+                  />
+                </div>
+              </div>
+            </form>
+
+            {/* Footer fijo */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-surface via-surface/95 to-transparent px-5 pb-5 pt-12">
+              <div className="pointer-events-auto mx-auto max-w-md">
+                <button
+                  type="submit"
+                  form="food-form"
+                  disabled={saveMut.isPending || !form.name.trim()}
+                  className="btn-press h-14 w-full rounded-full bg-primary-container text-base font-bold text-on-primary-container shadow-lg transition-all hover:shadow-primary/20 disabled:opacity-50"
+                >
+                  {saveMut.isPending ? (
+                    <Loader2 className="mx-auto h-5 w-5 animate-spin" />
+                  ) : editingId ? (
+                    t('foods.saveEdit')
+                  ) : (
+                    t('foods.save')
+                  )}
                 </button>
               </div>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              className="h-10 flex-1 rounded-full border border-border px-4 text-sm font-medium hover:bg-muted"
-            >
-              <span className="inline-flex items-center justify-center gap-1.5">
-                <Camera className="h-4 w-4" />
-                {previewPhoto ? t('foods.photo.change') : t('foods.photo.add')}
-              </span>
-            </button>
-          </div>
-
-          {error && <Alert variant="error">{error}</Alert>}
-
-          <div className="flex flex-wrap gap-1.5">
-            <button
-              type="button"
-              disabled={aiBusy !== null || !form.name.trim()}
-              onClick={() => aiFill('name')}
-              title={!form.name.trim() ? (t('foods.ai.needsName') ?? 'Escribe el nombre primero') : undefined}
-              className="inline-flex h-8 items-center gap-1 rounded-full bg-primary/10 px-3 text-[11px] font-medium text-primary hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-primary/20"
-            >
-              {aiBusy === 'name' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-              {t('foods.ai.fromName') ?? 'IA desde nombre'}
-            </button>
-            <button
-              type="button"
-              disabled={aiBusy !== null || !photoFile}
-              onClick={() => aiFill('photo')}
-              title={!photoFile ? (t('foods.ai.needsPhoto') ?? 'Añade una foto primero') : undefined}
-              className="inline-flex h-8 items-center gap-1 rounded-full bg-primary/10 px-3 text-[11px] font-medium text-primary hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-primary/20"
-            >
-              {aiBusy === 'photo' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-              {t('foods.ai.fromPhoto') ?? 'IA desde foto'}
-            </button>
-          </div>
-
-          <button
-            type="submit"
-            disabled={saveMut.isPending}
-            className="h-10 rounded-full bg-primary text-sm font-medium text-primary-foreground disabled:opacity-50"
-          >
-            {saveMut.isPending ? '…' : editingId ? t('foods.saveEdit') : t('foods.save')}
-          </button>
-        </form>
+            </div>
+          </motion.div>
+        </div>
       )}
 
       {isLoading ? (
@@ -346,26 +454,37 @@ export function FoodsPage() {
   );
 }
 
-function NumField({
+function MacroNumRow({
+  icon: Icon,
+  iconClass,
   label,
   value,
   onChange,
 }: {
+  icon: typeof Flame;
+  iconClass: string;
   label: string;
   value: string;
   onChange: (v: string) => void;
 }) {
   return (
-    <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-      <span>{label}</span>
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <Icon className={`h-5 w-5 flex-shrink-0 ${iconClass}`} />
+        <span className="truncate text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">
+          {label}
+        </span>
+      </div>
       <input
         type="number"
+        inputMode="decimal"
         min="0"
         step="0.1"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-10 rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+        placeholder="0"
+        className="h-10 w-28 rounded-lg border border-surface-variant bg-surface-container px-3 text-center text-sm font-semibold tabular-nums text-on-background focus:border-primary focus:outline-none"
       />
-    </label>
+    </div>
   );
 }

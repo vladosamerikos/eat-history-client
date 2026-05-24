@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Coffee,
   Cookie,
+  Flame,
   MessageCircle,
   Moon,
   Pencil,
@@ -29,6 +30,7 @@ import { listFoods, type Food } from '@/features/foods/foods.api';
 import { AddMealModal } from './AddMealModal';
 import { PhotoViewer } from '@/components/ui/PhotoViewer';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { MacroBadges, MacroTiles } from '@/components/ui/MacroBadges';
 import { toast } from 'sonner';
 
 // IMPORTANTE: aritmética en UTC para evitar el bug de TZ.
@@ -80,37 +82,50 @@ function DateStrip({ selected, onSelect, locale }: DateStripProps) {
     () => new Intl.DateTimeFormat(locale, { weekday: 'short' }),
     [locale],
   );
-  const fmtMonth = useMemo(() => new Intl.DateTimeFormat(locale, { month: 'short' }), [locale]);
 
   return (
-    <div
-      className="-mx-4 flex snap-x gap-1.5 overflow-x-auto px-4 pb-2 scrollbar-hide"
-      style={{ touchAction: 'pan-x' }}
-    >
-      {days.map((d) => {
-        const dt = new Date(`${d}T00:00:00`);
-        const isSelected = d === selected;
-        const isToday = d === today;
-        return (
-          <button
-            key={d}
-            ref={isSelected ? selectedRef : undefined}
-            type="button"
-            onClick={() => onSelect(d)}
-            className={`flex min-w-[3.25rem] snap-center flex-col items-center rounded-2xl border px-2 py-1.5 text-xs transition ${
-              isSelected
-                ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                : 'border-border bg-background hover:bg-muted'
-            }`}
-          >
-            <span className="opacity-70">{fmtWeekday.format(dt)}</span>
-            <span className="text-base font-semibold leading-tight">{dt.getDate()}</span>
-            <span className="text-[10px] opacity-70">
-              {isToday ? '•' : fmtMonth.format(dt)}
-            </span>
-          </button>
-        );
-      })}
+    <div className="relative">
+      <div
+        className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-3 no-scrollbar"
+        style={{ touchAction: 'pan-x' }}
+      >
+        {days.map((d) => {
+          const dt = new Date(`${d}T00:00:00`);
+          const isSelected = d === selected;
+          const isToday = d === today;
+          return (
+            <button
+              key={d}
+              ref={isSelected ? selectedRef : undefined}
+              type="button"
+              onClick={() => onSelect(d)}
+              className={`flex h-16 min-w-[3.5rem] flex-shrink-0 snap-center flex-col items-center justify-center rounded-xl text-xs transition ${
+                isSelected
+                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
+                  : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+              }`}
+            >
+              <span className={`text-[10px] uppercase tracking-wider ${isSelected ? 'opacity-90' : ''}`}>
+                {fmtWeekday.format(dt)}
+              </span>
+              <span className={`text-xl font-bold leading-none ${isSelected ? '' : 'text-on-background'}`}>
+                {dt.getDate()}
+              </span>
+              {isToday && !isSelected && (
+                <span className="mt-0.5 h-1 w-1 rounded-full bg-primary" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+      <div className="h-0.5 w-full overflow-hidden rounded-full bg-surface-container">
+        <div
+          className="h-full rounded-full bg-primary transition-all"
+          style={{
+            width: `${((days.findIndex((d) => d === selected) + 1) / days.length) * 100}%`,
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -258,23 +273,29 @@ export function MealsTodayPage() {
     setDragX(0);
   };
 
+  const macroLabels = {
+    protein: t('meals.macros.protein') ?? 'Protein',
+    carbs: t('meals.macros.carbs') ?? 'Carbs',
+    fat: t('meals.macros.fat') ?? 'Fat',
+  };
+
   return (
     <div className="w-full overflow-x-hidden">
       <header className="mb-3 flex items-center justify-between gap-2">
         <button
           type="button"
           onClick={goPrev}
-          className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full border border-border hover:bg-muted"
+          className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-surface-container text-on-surface-variant transition-colors hover:text-on-background"
           aria-label={t('meals.yesterday')}
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
         <div className="min-w-0 flex-1 text-center">
-          <h2 className="truncate text-lg font-semibold capitalize">{headerLabel}</h2>
+          <h2 className="truncate text-xl font-bold capitalize text-on-background">{headerLabel}</h2>
           <button
             type="button"
             onClick={() => setDate(todayISO())}
-            className="text-[11px] tabular-nums text-muted-foreground underline-offset-2 hover:underline"
+            className="text-[11px] tabular-nums text-on-surface-variant underline-offset-2 hover:underline"
           >
             {date}
           </button>
@@ -282,7 +303,7 @@ export function MealsTodayPage() {
         <button
           type="button"
           onClick={goNext}
-          className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full border border-border hover:bg-muted"
+          className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-surface-container text-on-surface-variant transition-colors hover:text-on-background"
           aria-label={t('meals.tomorrow')}
         >
           <ChevronRight className="h-5 w-5" />
@@ -310,34 +331,48 @@ export function MealsTodayPage() {
               opacity: { duration: 0.18 },
             }}
           >
-            <section className="my-4 grid gap-3 rounded-2xl border border-border bg-card p-4 text-card-foreground shadow-sm">
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="text-sm text-muted-foreground">{t('meals.dailyTotal')}</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-3xl font-semibold tabular-nums">
-                    {summary.data?.totalKcal ?? 0}
-                    <span className="ml-1 text-sm font-normal text-muted-foreground">kcal</span>
-                  </span>
+            {/* Daily Summary */}
+            <section className="my-4">
+              <div className="ai-glow glass-panel relative overflow-hidden rounded-xl p-4">
+                <div className="mb-6 flex items-end justify-between gap-3">
+                  <div>
+                    <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
+                      {t('meals.dailyTotal')}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-xl bg-primary/10">
+                        <Flame className="h-7 w-7 text-primary" />
+                      </span>
+                      <div className="flex flex-col">
+                        <span className="text-[40px] font-bold leading-none tabular-nums text-on-background">
+                          {summary.data?.totalKcal ?? 0}
+                        </span>
+                        <span className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-on-surface-variant">
+                          kcal
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                   <button
                     type="button"
                     onClick={() => navigate(`/app/chat?date=${date}`)}
-                    className="grid h-9 w-9 place-items-center rounded-full text-primary hover:bg-primary/10"
+                    className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-surface-bright text-primary hover:bg-surface-container-highest"
                     aria-label={t('chat.openDayChat')}
                     title={t('chat.openDayChat')}
                   >
                     <MessageCircle className="h-5 w-5" />
                   </button>
                 </div>
+                <MacroTiles
+                  protein={summary.data?.totalProtein ?? 0}
+                  carbs={summary.data?.totalCarbs ?? 0}
+                  fat={summary.data?.totalFat ?? 0}
+                  labels={macroLabels}
+                />
               </div>
-              {summary.data && (
-                <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                  <Macro label="P" value={summary.data.totalProtein} tone="protein" />
-                  <Macro label="C" value={summary.data.totalCarbs} tone="carbs" />
-                  <Macro label="G" value={summary.data.totalFat} tone="fat" />
-                </div>
-              )}
             </section>
 
+            {/* Meal type sections */}
             <div className="grid gap-3">
               {grouped.map(({ type, items }) => {
                 const TypeIcon = TYPE_ICON[type];
@@ -345,19 +380,19 @@ export function MealsTodayPage() {
                 return (
                   <section
                     key={type}
-                    className="overflow-hidden rounded-2xl border border-border bg-card text-card-foreground"
+                    className="overflow-hidden rounded-xl border border-outline-variant bg-surface"
                   >
-                    <header className="flex items-center justify-between gap-2 px-3 py-2.5">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-muted text-foreground/80">
-                          <TypeIcon className="h-4 w-4" />
+                    <header className="flex items-center justify-between gap-2 border-b border-outline-variant/40 bg-surface-container-low px-4 py-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-surface-container-high text-primary">
+                          <TypeIcon className="h-5 w-5" />
                         </span>
                         <div className="min-w-0">
-                          <h3 className="truncate text-sm font-semibold">
+                          <h3 className="truncate text-base font-bold text-on-background">
                             {t(`meals.types.${type}`)}
                           </h3>
                           {sectionKcal > 0 && (
-                            <p className="text-[11px] tabular-nums text-muted-foreground">
+                            <p className="text-[11px] font-semibold tabular-nums text-on-surface-variant">
                               {sectionKcal} kcal
                             </p>
                           )}
@@ -366,20 +401,19 @@ export function MealsTodayPage() {
                       <button
                         type="button"
                         onClick={() => setAdding(type)}
-                        className="inline-flex h-9 flex-shrink-0 items-center gap-1 rounded-full bg-primary px-3 text-xs font-medium text-primary-foreground"
+                        className="btn-press inline-flex h-9 flex-shrink-0 items-center gap-1.5 rounded-full bg-primary-container px-4 text-xs font-bold text-on-primary-container shadow-sm transition-all"
                       >
                         <Plus className="h-4 w-4" />
                         <span>{t('meals.add')}</span>
                       </button>
                     </header>
                     {items.length === 0 ? (
-                      <p className="px-3 pb-3 text-xs text-muted-foreground">
+                      <p className="px-4 py-4 text-xs text-on-surface-variant">
                         {t('meals.noMeals')}
                       </p>
                     ) : (
-                      <ul className="grid gap-1.5 px-2 pb-2">
+                      <ul className="grid gap-2 p-3">
                         {items.map((m) => {
-                          // Preview: prioridad foto del meal > foto del Food si solo 1 entry > mosaico de Foods.
                           const entryFoods = m.entries
                             .map((e) => (e.foodId ? foodById.get(String(e.foodId)) : null))
                             .filter(Boolean) as Food[];
@@ -390,90 +424,105 @@ export function MealsTodayPage() {
                           const mosaicFoods = !m.photoUrl && !singleFoodImage
                             ? entryFoods.filter((f) => f?.imageUrl).slice(0, 4)
                             : [];
+                          const name = m.entries
+                            .map((e) => {
+                              const f = e.foodId ? foodById.get(String(e.foodId)) : null;
+                              return e.customName ?? f?.name ?? `Food (${e.grams}g)`;
+                            })
+                            .join(' · ');
+                          const mealTotals = m.entries.reduce(
+                            (acc, e) => ({
+                              protein: acc.protein + (e.protein ?? 0),
+                              carbs: acc.carbs + (e.carbs ?? 0),
+                              fat: acc.fat + (e.fat ?? 0),
+                            }),
+                            { protein: 0, carbs: 0, fat: 0 },
+                          );
                           return (
-                          <li
-                            key={m._id}
-                            className="flex items-center gap-2 rounded-xl bg-muted/50 p-2"
-                          >
-                            {m.photoUrl ? (
-                              <img
-                                src={m.photoUrl}
-                                alt=""
-                                loading="lazy"
-                                onClick={() => setViewingPhoto(m.photoUrl ?? null)}
-                                className="h-12 w-12 flex-shrink-0 cursor-zoom-in rounded-lg object-cover transition-transform active:scale-95"
-                              />
-                            ) : singleFoodImage ? (
-                              <img
-                                src={singleFoodImage}
-                                alt=""
-                                loading="lazy"
-                                onClick={() => setViewingPhoto(singleFoodImage)}
-                                className="h-12 w-12 flex-shrink-0 cursor-zoom-in rounded-lg object-cover transition-transform active:scale-95"
-                              />
-                            ) : mosaicFoods.length > 1 ? (
-                              <div className="grid h-12 w-12 flex-shrink-0 grid-cols-2 grid-rows-2 gap-px overflow-hidden rounded-lg bg-background">
-                                {mosaicFoods.slice(0, 4).map((f, i) => (
-                                  <img
-                                    key={(f._id || '') + i}
-                                    src={f.imageUrl!}
-                                    alt=""
-                                    loading="lazy"
-                                    className="h-full w-full object-cover"
-                                  />
-                                ))}
-                                {Array.from({ length: Math.max(0, 4 - mosaicFoods.length) }).map((_, i) => (
-                                  <span key={`pad-${i}`} className="bg-muted" />
-                                ))}
-                              </div>
-                            ) : (
-                              <span className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-lg bg-background text-muted-foreground">
-                                <UtensilsCrossed className="h-4 w-4" />
-                              </span>
-                            )}
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-semibold tabular-nums">
-                                {m.totalKcal}
-                                <span className="ml-1 text-xs font-normal text-muted-foreground">
-                                  kcal
+                            <li
+                              key={m._id}
+                              className="flex items-center gap-3 rounded-lg bg-surface-container-low p-3"
+                            >
+                              {m.photoUrl ? (
+                                <img
+                                  src={m.photoUrl}
+                                  alt=""
+                                  loading="lazy"
+                                  onClick={() => setViewingPhoto(m.photoUrl ?? null)}
+                                  className="h-12 w-12 flex-shrink-0 cursor-zoom-in rounded-lg object-cover transition-transform active:scale-95"
+                                />
+                              ) : singleFoodImage ? (
+                                <img
+                                  src={singleFoodImage}
+                                  alt=""
+                                  loading="lazy"
+                                  onClick={() => setViewingPhoto(singleFoodImage)}
+                                  className="h-12 w-12 flex-shrink-0 cursor-zoom-in rounded-lg object-cover transition-transform active:scale-95"
+                                />
+                              ) : mosaicFoods.length > 1 ? (
+                                <div className="grid h-12 w-12 flex-shrink-0 grid-cols-2 grid-rows-2 gap-px overflow-hidden rounded-lg bg-surface">
+                                  {mosaicFoods.slice(0, 4).map((f, i) => (
+                                    <img
+                                      key={(f._id || '') + i}
+                                      src={f.imageUrl!}
+                                      alt=""
+                                      loading="lazy"
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ))}
+                                  {Array.from({ length: Math.max(0, 4 - mosaicFoods.length) }).map((_, i) => (
+                                    <span key={`pad-${i}`} className="bg-surface-container" />
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-lg bg-surface-container text-on-surface-variant">
+                                  <UtensilsCrossed className="h-5 w-5" />
                                 </span>
-                              </p>
-                              <p className="break-words text-[11px] leading-tight text-muted-foreground">
-                                {m.entries
-                                  .map((e) => {
-                                    const f = e.foodId ? foodById.get(String(e.foodId)) : null;
-                                    return e.customName ?? f?.name ?? `Food (${e.grams}g)`;
-                                  })
-                                  .join(' \u00b7 ')}
-                              </p>
-                            </div>
-                            <div className="flex flex-shrink-0 items-center gap-1">
-                              <button
-                                type="button"
-                                onClick={() => setEditing(m)}
-                                className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-background hover:text-foreground"
-                                aria-label={t('meals.edit')}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  const ok = await confirm({
-                                    title: t('common.deleteConfirmTitle'),
-                                    description: t('meals.deleteConfirm'),
-                                    destructive: true,
-                                    confirmText: t('common.delete'),
-                                  });
-                                  if (ok) del.mutate(m._id);
-                                }}
-                                className="grid h-8 w-8 place-items-center rounded-full text-destructive hover:bg-destructive/10"
-                                aria-label={t('meals.remove')}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </li>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-semibold text-on-background">{name}</p>
+                                <div className="mt-1">
+                                  <MacroBadges
+                                    kcal={m.totalKcal}
+                                    protein={mealTotals.protein}
+                                    carbs={mealTotals.carbs}
+                                    fat={mealTotals.fat}
+                                    labels={{
+                                      protein: t('meals.macros.proteinShort') ?? 'P',
+                                      carbs: t('meals.macros.carbsShort') ?? 'C',
+                                      fat: t('meals.macros.fatShort') ?? 'G',
+                                    }}
+                                    compact
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex flex-shrink-0 flex-col items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setEditing(m)}
+                                  className="grid h-8 w-8 place-items-center rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-background"
+                                  aria-label={t('meals.edit')}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    const ok = await confirm({
+                                      title: t('common.deleteConfirmTitle'),
+                                      description: t('meals.deleteConfirm'),
+                                      destructive: true,
+                                      confirmText: t('common.delete'),
+                                    });
+                                    if (ok) del.mutate(m._id);
+                                  }}
+                                  className="grid h-8 w-8 place-items-center rounded-full text-destructive hover:bg-destructive/10"
+                                  aria-label={t('meals.remove')}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </li>
                           );
                         })}
                       </ul>
@@ -483,7 +532,7 @@ export function MealsTodayPage() {
               })}
             </div>
 
-            <p className="mt-4 text-center text-[11px] text-muted-foreground">
+            <p className="mt-4 text-center text-[11px] text-on-surface-variant">
               {t('meals.swipeHint')}
             </p>
           </motion.div>
@@ -500,29 +549,6 @@ export function MealsTodayPage() {
         />
       )}
       <PhotoViewer src={viewingPhoto} onClose={() => setViewingPhoto(null)} />
-    </div>
-  );
-}
-
-function Macro({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone: 'protein' | 'carbs' | 'fat';
-}) {
-  const toneClass =
-    tone === 'protein'
-      ? 'bg-primary/10 text-primary'
-      : tone === 'carbs'
-        ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
-        : 'bg-rose-500/15 text-rose-700 dark:text-rose-300';
-  return (
-    <div className={`rounded-xl px-2 py-2 ${toneClass}`}>
-      <p className="text-sm font-semibold tabular-nums">{value}g</p>
-      <p className="text-[10px] uppercase tracking-wide opacity-70">{label}</p>
     </div>
   );
 }
