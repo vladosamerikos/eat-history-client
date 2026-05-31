@@ -44,6 +44,20 @@ export interface ChatPrompt {
 
 export const listConversations = () => api<ChatListItem[]>(`/chat`);
 export const getDailyChat = (date: string) => api<ChatConversation>(`/chat/daily/${date}`);
+
+export interface AgentEvent {
+  id: string;
+  kind: 'meal' | 'weight';
+  refId: string;
+  date: string;
+  mealType?: string;
+  action: 'created' | 'updated';
+  at: number;
+}
+
+/** Acciones recientes que el agente (MCP) hizo sobre comida/peso (para cards). */
+export const getAgentEvents = (since = 0) => api<AgentEvent[]>(`/chat/agent-events?since=${since}`);
+
 export const createExtraDayChat = (date: string) =>
   api<ChatConversation>(`/chat/daily/${date}/extra`, { method: 'POST' });
 export const getChat = (id: string) => api<ChatConversation>(`/chat/${id}`);

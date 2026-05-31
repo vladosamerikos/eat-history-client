@@ -37,6 +37,7 @@ import { PhotoSourceSheet } from '@/components/ui/PhotoSourceSheet';
 import { createVoiceSession } from './voice.api';
 import { useVoice } from './VoiceContext';
 import { VoiceVisualizer } from './VoiceVisualizer';
+import { AgentEventCards, useAgentEventCards } from '@/features/chat/AgentEventCards';
 
 type Status = 'idle' | 'connecting' | 'connected' | 'agent-waiting' | 'ended' | 'error';
 
@@ -97,6 +98,14 @@ export function VoiceDrawer() {
   const [error, setError] = useState<string | null>(null);
   const [muted, setMuted] = useState(false);
   const [speakerMuted, setSpeakerMuted] = useState(false);
+
+  // Cards de acciones del agente (comida/peso añadidos o editados por MCP).
+  const { events: agentEvents, clear: clearAgentEvents } = useAgentEventCards(
+    isOpen && (status === 'connected' || status === 'agent-waiting'),
+  );
+  useEffect(() => {
+    if (!isOpen) clearAgentEvents();
+  }, [isOpen, clearAgentEvents]);
   const [agentSpeaking, setAgentSpeaking] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState('');
@@ -582,6 +591,11 @@ export function VoiceDrawer() {
                   </div>
                 </div>
               ))}
+              {agentEvents.length > 0 && (
+                <div className="pt-1">
+                  <AgentEventCards events={agentEvents} />
+                </div>
+              )}
               {agentSpeaking && (
                 <div className="flex justify-start">
                   <div className="rounded-xl rounded-tl-none border border-outline-variant/30 bg-surface-container-high px-4 py-2.5">

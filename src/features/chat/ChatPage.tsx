@@ -9,6 +9,7 @@ import {
   CalendarDays,
   ChevronDown,
   ChevronUp,
+  History,
   ImagePlus,
   Loader2,
   AudioLines,
@@ -43,9 +44,10 @@ import { useVoice } from '@/features/voice/VoiceContext';
 import { useDictation } from '@/features/voice/useDictation';
 import { Select } from '@/components/ui/Select';
 import { ImageLightbox } from '@/components/ui/ImageLightbox';
+import { PhotoSourceSheet } from '@/components/ui/PhotoSourceSheet';
 import { cn } from '@/lib/cn';
 import { PromptsSheet } from './PromptsSheet';
-
+import { AgentEventCards, useAgentEventCards } from './AgentEventCards';
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -94,6 +96,9 @@ export function ChatPage() {
   });
   const convo = (mode === 'daily' ? dailyQ.data : chatQ.data) as ChatConversation | undefined;
 
+  // Cards de acciones del agente (comida/peso) creadas/editadas vía MCP.
+  const { events: agentEvents } = useAgentEventCards(Boolean(convo));
+
   // History list
   const historyQ = useQuery({
     queryKey: ['chat', 'list'],
@@ -108,6 +113,8 @@ export function ChatPage() {
   });
 
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [photoSheetOpen, setPhotoSheetOpen] = useState(false);
   const [promptsOpen, setPromptsOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [renameDraft, setRenameDraft] = useState('');
@@ -124,17 +131,66 @@ export function ChatPage() {
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const dictBaseRef = useRef('');
+  const pressTimerRef = useRef<number | null>(null);
+  const longFiredRef = useRef(false);
 
   const voice = useVoice();
   const dictation = useDictation({
     locale: i18n.language.split('-')[0],
+    onPartial: (partial) => {
+      const base = dictBaseRef.current;
+      setText(base ? `${base.trimEnd()} ${partial}` : partial);
+    },
     onResult: (transcript) => {
-      setText((prev) => (prev ? `${prev.trimEnd()} ${transcript}` : transcript));
+      const base = dictBaseRef.current;
+      setText(base ? `${base.trimEnd()} ${transcript}` : transcript);
+      dictBaseRef.current = '';
       inputRef.current?.focus();
     },
     onError: (msg) => setError(msg),
   });
+
+  function openVoiceMode() {
+    if (dictation.recording) dictation.cancel();
+    setMenuOpen(false);
+    voice.open({
+      agent: 'chat',
+      onChanged: () => {
+        qc.invalidateQueries({ queryKey: ['chat'] });
+      },
+    });
+  }
+
+  function handleMicTap() {
+    if (dictation.recording) {
+      dictation.toggle();
+      return;
+    }
+    dictBaseRef.current = text;
+    dictation.toggle();
+  }
+
+  function onMicPointerDown() {
+    longFiredRef.current = false;
+    pressTimerRef.current = window.setTimeout(() => {
+      longFiredRef.current = true;
+      openVoiceMode();
+    }, 450);
+  }
+
+  function clearMicTimer() {
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+  }
+
+  function onMicPointerUp() {
+    clearMicTimer();
+    if (longFiredRef.current) return;
+    handleMicTap();
+  }
 
   const messages = useMemo<ChatMessage[]>(() => convo?.messages ?? [], [convo]);
 
@@ -480,57 +536,12 @@ export function ChatPage() {
         </div>
 
         <div className="flex items-center gap-1">
-          {isAdmin && chatModels.length > 0 ? (
-            <Select
-              value={modelOverride ?? ''}
-              onValueChange={(v) => setModelOverride(v || undefined)}
-              ariaLabel={t('chat.model')}
-              triggerClassName="!py-1 !px-2 text-xs"
-              options={[
-                { value: '', label: t('chat.modelDefault') },
-                ...chatModels.map((m) => ({
-                  value: m.modelId,
-                  label: m.displayName,
-                  description: m.provider,
-                })),
-              ]}
-            />
-          ) : null}
           <button
             type="button"
-            onClick={() =>
-              voice.open({
-                agent: 'chat',
-                onChanged: () => {
-                  qc.invalidateQueries({ queryKey: ['chat'] });
-                },
-              })
-            }
+            onClick={() => setMenuOpen(true)}
             className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted"
-            aria-label={t('voice.startVoiceMode')}
-            title={t('voice.startVoiceMode')}
-          >
-            <AudioLines className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => summaryMut.mutate()}
-            disabled={summaryMut.isPending || messages.length === 0}
-            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted disabled:opacity-40"
-            aria-label={t('chat.generateSummary')}
-            title={t('chat.generateSummary')}
-          >
-            {summaryMut.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Sparkles className="h-4 w-4" />
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={() => setHistoryOpen(true)}
-            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted"
-            aria-label={t('chat.history')}
+            aria-label={t('chat.moreOptions')}
+            title={t('chat.moreOptions')}
           >
             <MoreHorizontal className="h-4 w-4" />
           </button>
@@ -630,6 +641,11 @@ export function ChatPage() {
             </AnimatePresence>
           </ul>
         )}
+        {agentEvents.length > 0 ? (
+          <div className="mt-3">
+            <AgentEventCards events={agentEvents} />
+          </div>
+        ) : null}
         {error ? (
           <div className="mt-2 rounded-md border border-destructive/40 bg-destructive/5 p-2 text-xs text-destructive">
             {t('chat.errorPrefix')}: {error}
@@ -662,60 +678,15 @@ export function ChatPage() {
           </div>
         ) : null}
         <div className="flex items-end gap-1 rounded-2xl border border-border bg-background p-1.5 shadow-sm focus-within:border-primary/50">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) setImageFile(f);
-              e.target.value = '';
-            }}
-          />
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => setPhotoSheetOpen(true)}
             className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted"
             aria-label={t('chat.attachImage')}
             title={t('chat.attachImage')}
           >
             <ImagePlus className="h-4 w-4" />
           </button>
-          {dictation.supported ? (
-            <button
-              type="button"
-              onClick={() => dictation.toggle()}
-              disabled={dictation.transcribing || streaming || imageMut.isPending}
-              className={cn(
-                'grid h-9 w-9 shrink-0 place-items-center rounded-full transition disabled:opacity-40',
-                dictation.recording
-                  ? 'bg-destructive text-destructive-foreground animate-pulse'
-                  : 'text-muted-foreground hover:bg-muted',
-              )}
-              aria-label={dictation.recording ? t('voice.dictateStop') : t('voice.dictateStart')}
-              title={dictation.recording ? t('voice.dictateStop') : t('voice.dictateStart')}
-            >
-              {dictation.transcribing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : dictation.recording ? (
-                <Square className="h-4 w-4" />
-              ) : (
-                <Mic className="h-4 w-4" />
-              )}
-            </button>
-          ) : null}
-          {!text.trim() && !imageFile && messages.length === 0 ? (
-            <button
-              type="button"
-              onClick={() => setPromptsOpen(true)}
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted"
-              aria-label={t('chat.prompts.title')}
-              title={t('chat.prompts.title')}
-            >
-              <Bookmark className="h-4 w-4" />
-            </button>
-          ) : null}
           <textarea
             ref={inputRef}
             value={text}
@@ -730,6 +701,32 @@ export function ChatPage() {
               }
             }}
           />
+          {dictation.supported && !text.trim() && !imageFile ? (
+            <button
+              type="button"
+              onPointerDown={onMicPointerDown}
+              onPointerUp={onMicPointerUp}
+              onPointerLeave={clearMicTimer}
+              onContextMenu={(e) => e.preventDefault()}
+              disabled={dictation.transcribing || streaming || imageMut.isPending}
+              className={cn(
+                'grid h-9 w-9 shrink-0 select-none touch-none place-items-center rounded-full transition disabled:opacity-40',
+                dictation.recording
+                  ? 'bg-destructive text-destructive-foreground animate-pulse'
+                  : 'text-muted-foreground hover:bg-muted',
+              )}
+              aria-label={dictation.recording ? t('voice.dictateStop') : t('voice.dictateStart')}
+              title={dictation.recording ? t('voice.dictateStop') : t('voice.dictateHoldForVoice')}
+            >
+              {dictation.transcribing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : dictation.recording ? (
+                <Square className="h-4 w-4" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+            </button>
+          ) : null}
           <button
             type="submit"
             disabled={(!text.trim() && !imageFile) || streaming || imageMut.isPending}
@@ -745,74 +742,197 @@ export function ChatPage() {
         </div>
       </form>
 
-      {/* History sheet */}
-      {historyOpen ? (
-        <BottomSheet onClose={() => setHistoryOpen(false)} title={t('chat.history')}>
-          <button
-            type="button"
-            onClick={() => {
-              setHistoryOpen(false);
-              setCreatingChat(true);
-              navigate('/app/chat');
-            }}
-            className="mb-2 flex w-full items-center gap-2 rounded-md border border-dashed border-border p-3 text-sm text-primary hover:bg-muted"
+      {/* History drawer (left, fullscreen) */}
+      <AnimatePresence>
+        {historyOpen ? (
+          <motion.div
+            key="history-drawer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 flex bg-black/40"
+            onClick={() => setHistoryOpen(false)}
           >
-            <Plus className="h-4 w-4" />
-            {t('chat.newChat')}
-          </button>
-          {historyQ.data?.length ? (
-            <ul className="divide-y divide-border">
-              {historyQ.data.map((h) => (
-                <li key={h.id} className="flex min-w-0 items-start gap-2 py-1">
-                  <button
-                    type="button"
-                    onClick={() => openChat(h)}
-                    className="min-w-0 flex-1 rounded-md p-2 text-left text-sm hover:bg-muted"
-                  >
-                    <div className="truncate font-medium">{chatLabel(h, t)}</div>
-                    {h.lastMessage ? (
-                      <div className="line-clamp-2 break-words text-xs text-muted-foreground">
-                        {h.lastMessage}
-                      </div>
-                    ) : null}
-                  </button>
-                  {h.kind === 'free' ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setHistoryOpen(false);
-                        setRenameDraft(h.title);
-                        setParams({ id: h.id });
-                        setRenaming(true);
-                      }}
-                      className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted"
-                      aria-label={t('chat.rename')}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const ok = await confirm({
-                        title: t('common.deleteConfirmTitle'),
-                        description: t('chat.deleteConfirm'),
-                        destructive: true,
-                        confirmText: t('common.delete'),
-                      });
-                      if (ok) deleteMut.mutate(h.id);
-                    }}
-                    className="grid h-8 w-8 place-items-center rounded-full text-destructive hover:bg-destructive/10"
-                    aria-label={t('chat.delete')}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', stiffness: 360, damping: 36 }}
+              onClick={(e) => e.stopPropagation()}
+              className="flex h-full w-full max-w-sm flex-col bg-background shadow-2xl"
+            >
+              <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                <h2 className="text-base font-semibold">{t('chat.history')}</h2>
+                <button
+                  type="button"
+                  onClick={() => setHistoryOpen(false)}
+                  className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted"
+                  aria-label="close"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto p-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHistoryOpen(false);
+                    setCreatingChat(true);
+                    navigate('/app/chat');
+                  }}
+                  className="mb-3 flex w-full items-center gap-2 rounded-xl border border-dashed border-border p-3 text-sm text-primary hover:bg-muted"
+                >
+                  <Plus className="h-4 w-4" />
+                  {t('chat.newChat')}
+                </button>
+                {historyQ.data?.length ? (
+                  <ul className="space-y-1">
+                    {historyQ.data.map((h) => (
+                      <li key={h.id} className="flex min-w-0 items-start gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openChat(h)}
+                          className={cn(
+                            'min-w-0 flex-1 rounded-lg p-2.5 text-left text-sm hover:bg-muted',
+                            (h.kind === 'daily' && h.date === dateParam) || h.id === idParam
+                              ? 'bg-muted'
+                              : '',
+                          )}
+                        >
+                          <div className="truncate font-medium">{chatLabel(h, t)}</div>
+                          {h.lastMessage ? (
+                            <div className="line-clamp-2 break-words text-xs text-muted-foreground">
+                              {h.lastMessage}
+                            </div>
+                          ) : null}
+                        </button>
+                        {h.kind === 'free' ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setHistoryOpen(false);
+                              setRenameDraft(h.title);
+                              setParams({ id: h.id });
+                              setRenaming(true);
+                            }}
+                            className="mt-1 grid h-8 w-8 flex-shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted"
+                            aria-label={t('chat.rename')}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const ok = await confirm({
+                              title: t('common.deleteConfirmTitle'),
+                              description: t('chat.deleteConfirm'),
+                              destructive: true,
+                              confirmText: t('common.delete'),
+                            });
+                            if (ok) deleteMut.mutate(h.id);
+                          }}
+                          className="mt-1 grid h-8 w-8 place-items-center rounded-full text-destructive hover:bg-destructive/10"
+                          aria-label={t('chat.delete')}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="px-2 text-sm text-muted-foreground">{t('chat.historyEmpty')}</p>
+                )}
+              </div>
+            </motion.aside>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      {/* Three-dots options menu */}
+      {menuOpen ? (
+        <BottomSheet onClose={() => setMenuOpen(false)} title={t('chat.moreOptions')}>
+          <div className="space-y-1">
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                setHistoryOpen(true);
+              }}
+              className="flex w-full items-center gap-3 rounded-xl p-3 text-left text-sm hover:bg-muted"
+            >
+              <History className="h-4 w-4 text-primary" />
+              {t('chat.history')}
+            </button>
+            <button
+              type="button"
+              onClick={openVoiceMode}
+              className="flex w-full items-center gap-3 rounded-xl p-3 text-left text-sm hover:bg-muted"
+            >
+              <AudioLines className="h-4 w-4 text-primary" />
+              {t('voice.startVoiceMode')}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                summaryMut.mutate();
+              }}
+              disabled={summaryMut.isPending || messages.length === 0}
+              className="flex w-full items-center gap-3 rounded-xl p-3 text-left text-sm hover:bg-muted disabled:opacity-40"
+            >
+              {summaryMut.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              ) : (
+                <Sparkles className="h-4 w-4 text-primary" />
+              )}
+              {t('chat.generateSummary')}
+            </button>
+            {convo?.kind === 'free' ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setRenameDraft(convo.title);
+                  setRenaming(true);
+                }}
+                className="flex w-full items-center gap-3 rounded-xl p-3 text-left text-sm hover:bg-muted"
+              >
+                <Pencil className="h-4 w-4 text-primary" />
+                {t('chat.rename')}
+              </button>
+            ) : null}
+            {isAdmin && chatModels.length > 0 ? (
+              <div className="rounded-xl p-3">
+                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                  {t('chat.model')}
+                </label>
+                <Select
+                  value={modelOverride ?? ''}
+                  onValueChange={(v) => setModelOverride(v || undefined)}
+                  ariaLabel={t('chat.model')}
+                  options={[
+                    { value: '', label: t('chat.modelDefault') },
+                    ...chatModels.map((m) => ({
+                      value: m.modelId,
+                      label: m.displayName,
+                      description: m.provider,
+                    })),
+                  ]}
+                />
+              </div>
+            ) : null}
+          </div>
         </BottomSheet>
       ) : null}
+
+      {/* Photo source sheet */}
+      <PhotoSourceSheet
+        open={photoSheetOpen}
+        onClose={() => setPhotoSheetOpen(false)}
+        onFile={(f) => setImageFile(f)}
+        title={t('chat.attachImage')}
+      />
 
       {/* Prompts sheet */}
       {promptsOpen ? (
