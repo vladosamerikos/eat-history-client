@@ -2,18 +2,11 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import {
-  Camera,
-  Loader2,
-  Pencil,
-  Search,
-  Sparkles,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { Camera, Loader2, Pencil, Search, Sparkles, Trash2, X } from 'lucide-react';
 import { MacroInlineStat } from '@/components/ui/MacroChips';
 import { MacroInputRow } from '@/components/ui/MacroInputRow';
 import { PhotoSourceSheet } from '@/components/ui/PhotoSourceSheet';
+import { PhotoCard } from '@/components/ui/PhotoCard';
 import {
   createFood,
   deleteFood,
@@ -150,16 +143,17 @@ export function FoodsPage() {
     try {
       // weightG=100 → los valores devueltos están por 100g.
       const result = await estimateNutrition({
-        image: mode === 'photo' ? photoFile ?? undefined : undefined,
+        image: mode === 'photo' ? (photoFile ?? undefined) : undefined,
         name: form.name.trim() || undefined,
         weightG: 100,
         locale: i18n.language,
       });
       setForm((prev) => ({
         ...prev,
-        name: prev.name.trim() ? prev.name : result.name ?? prev.name,
+        name: prev.name.trim() ? prev.name : (result.name ?? prev.name),
         kcal: result.kcal != null ? String(Math.round(result.kcal)) : prev.kcal,
-        protein: result.proteinG != null ? String(Math.round(result.proteinG * 10) / 10) : prev.protein,
+        protein:
+          result.proteinG != null ? String(Math.round(result.proteinG * 10) / 10) : prev.protein,
         carbs: result.carbsG != null ? String(Math.round(result.carbsG * 10) / 10) : prev.carbs,
         fat: result.fatG != null ? String(Math.round(result.fatG * 10) / 10) : prev.fat,
       }));
@@ -246,45 +240,16 @@ export function FoodsPage() {
               {error && <Alert variant="error">{error}</Alert>}
 
               {/* Photo card */}
-              {previewPhoto ? (
-                <div className="ai-glow relative overflow-hidden rounded-xl">
-                  <img src={previewPhoto} alt="" className="aspect-video w-full object-cover" />
-                  <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-gradient-to-t from-black/80 to-transparent p-3">
-                    <button
-                      type="button"
-                      onClick={() => setPhotoSheetOpen(true)}
-                      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-surface-container/90 px-3 text-xs font-semibold text-on-surface backdrop-blur hover:bg-surface-container-high"
-                    >
-                      <Camera className="h-3.5 w-3.5" />
-                      {t('foods.photo.change')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPhotoFile(null);
-                        setPhotoExistingUrl(undefined);
-                      }}
-                      className="grid h-9 w-9 place-items-center rounded-full bg-surface-container/90 text-on-surface backdrop-blur hover:bg-surface-container-high"
-                      aria-label={t('foods.photo.remove') ?? 'Remove'}
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setPhotoSheetOpen(true)}
-                  className="ai-glow group glass-panel relative flex h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-xl p-4"
-                >
-                  <div className="z-10 grid h-12 w-12 place-items-center rounded-full bg-surface-container transition-transform group-hover:scale-105">
-                    <Camera className="h-5 w-5 text-primary" />
-                  </div>
-                  <span className="z-10 text-sm font-semibold text-primary">
-                    {t('foods.photo.add') ?? 'Add photo'}
-                  </span>
-                </button>
-              )}
+              <PhotoCard
+                previewUrl={previewPhoto}
+                onPick={() => setPhotoSheetOpen(true)}
+                onRemove={() => {
+                  setPhotoFile(null);
+                  setPhotoExistingUrl(undefined);
+                }}
+                emptyIcon={<Camera className="h-5 w-5 text-primary" />}
+                emptyLabel={t('foods.photo.add') ?? 'Add photo'}
+              />
 
               {/* Name + macros card */}
               <div className="space-y-5 rounded-xl border border-surface-variant bg-surface-container-low p-5">
@@ -301,9 +266,7 @@ export function FoodsPage() {
                   />
                 </div>
 
-                <p className="text-[11px] text-on-surface-variant">
-                  {t('foods.per100Hint')}
-                </p>
+                <p className="text-[11px] text-on-surface-variant">{t('foods.per100Hint')}</p>
 
                 {/* AI pills */}
                 <div className="flex flex-wrap gap-1.5">
@@ -314,7 +277,11 @@ export function FoodsPage() {
                     title={!form.name.trim() ? (t('foods.ai.needsName') ?? '') : undefined}
                     className="inline-flex h-8 items-center gap-1 rounded-full bg-primary/10 px-3 text-[11px] font-semibold text-primary hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {aiBusy === 'name' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                    {aiBusy === 'name' ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3 w-3" />
+                    )}
                     {t('foods.ai.fromName')}
                   </button>
                   <button
@@ -324,7 +291,11 @@ export function FoodsPage() {
                     title={!photoFile ? (t('foods.ai.needsPhoto') ?? '') : undefined}
                     className="inline-flex h-8 items-center gap-1 rounded-full bg-primary/10 px-3 text-[11px] font-semibold text-primary hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {aiBusy === 'photo' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                    {aiBusy === 'photo' ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3 w-3" />
+                    )}
                     {t('foods.ai.fromPhoto')}
                   </button>
                 </div>
@@ -410,7 +381,11 @@ export function FoodsPage() {
               className="flex min-w-0 items-center gap-3 rounded-xl bg-surface-container-low px-3 py-2.5"
             >
               {f.imageUrl ? (
-                <img src={f.imageUrl} alt="" className="h-14 w-14 flex-shrink-0 rounded-lg object-cover" />
+                <img
+                  src={f.imageUrl}
+                  alt=""
+                  className="h-14 w-14 flex-shrink-0 rounded-lg object-cover"
+                />
               ) : (
                 <div className="grid h-14 w-14 flex-shrink-0 place-items-center rounded-lg bg-surface-container text-base">
                   🥗
@@ -442,7 +417,9 @@ export function FoodsPage() {
                     onClick={async () => {
                       const ok = await confirm({
                         title: t('common.deleteConfirmTitle'),
-                        description: t('foods.deleteConfirm', { defaultValue: t('common.deleteConfirmDesc') }),
+                        description: t('foods.deleteConfirm', {
+                          defaultValue: t('common.deleteConfirmDesc'),
+                        }),
                         destructive: true,
                         confirmText: t('common.delete'),
                       });

@@ -56,7 +56,8 @@ export function WeightPage() {
   });
 
   const fmtDate = useMemo(
-    () => new Intl.DateTimeFormat(i18n.language, { day: '2-digit', month: 'short', year: 'numeric' }),
+    () =>
+      new Intl.DateTimeFormat(i18n.language, { day: '2-digit', month: 'short', year: 'numeric' }),
     [i18n.language],
   );
 
@@ -144,75 +145,82 @@ export function WeightPage() {
       </div>
 
       {/* List */}
-      <div className="grid gap-1.5">
-        {items.length === 0 && !list.isLoading && (
-          <p className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
-            {t('weight.empty')}
-          </p>
-        )}
-        {items.map((w) => (
-          <div
-            key={w._id}
-            className="flex items-center gap-2 rounded-xl border border-border bg-background p-2"
-          >
-            {w.photoUrl ? (
-              <img
-                src={w.photoUrl}
-                alt=""
-                loading="lazy"
-                onClick={() => setViewingPhoto(w.photoUrl ?? null)}
-                className="h-12 w-12 flex-shrink-0 cursor-zoom-in rounded-lg object-cover transition-transform active:scale-95"
-              />
-            ) : (
-              <span className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
-                <Scale className="h-4 w-4" />
-              </span>
-            )}
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold tabular-nums">
-                {w.kg.toFixed(1)}
-                <span className="ml-1 text-xs font-normal text-muted-foreground">kg</span>
-                {w.bodyFat != null && (
-                  <span className="ml-2 text-xs font-normal text-muted-foreground">
-                    · {w.bodyFat}% {t('weight.fat')}
-                  </span>
-                )}
-              </p>
-              <p className="text-[11px] leading-tight text-muted-foreground">
-                {fmtDate.format(new Date(`${w.date}T00:00:00`))}
-                {w.time ? ` · ${w.time}` : ''}
-                {w.notes ? ` · ${w.notes}` : ''}
-              </p>
+      {items.length === 0 && !list.isLoading ? (
+        <p className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+          {t('weight.empty')}
+        </p>
+      ) : (
+        <div className="overflow-hidden rounded-2xl border border-border bg-background">
+          {items.map((w, i) => (
+            <div
+              key={w._id}
+              className={`group flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted/30 ${
+                i > 0 ? 'border-t border-t-border/60' : ''
+              }`}
+            >
+              <div className="flex min-w-0 flex-1 items-baseline gap-3">
+                <p className="text-base font-bold tabular-nums text-on-background">
+                  {w.kg.toFixed(1)}
+                  <span className="ml-0.5 text-[11px] font-medium text-muted-foreground">kg</span>
+                </p>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[11px] leading-tight text-muted-foreground">
+                    {fmtDate.format(new Date(`${w.date}T00:00:00`))}
+                    {w.time ? ` · ${w.time}` : ''}
+                    {w.bodyFat != null ? ` · ${w.bodyFat}% ${t('weight.fat')}` : ''}
+                  </p>
+                  {w.notes && (
+                    <p className="truncate text-[11px] leading-tight text-muted-foreground/80">
+                      {w.notes}
+                    </p>
+                  )}
+                </div>
+              </div>
+              {w.photoUrl && (
+                <button
+                  type="button"
+                  onClick={() => setViewingPhoto(w.photoUrl ?? null)}
+                  className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg transition-transform active:scale-95"
+                  aria-label={t('common.viewPhoto') ?? 'View photo'}
+                >
+                  <img
+                    src={w.photoUrl}
+                    alt=""
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
+                </button>
+              )}
+              <div className="flex flex-shrink-0 items-center">
+                <button
+                  type="button"
+                  onClick={() => setEditing(w)}
+                  className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label={t('common.edit') ?? 'Edit'}
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: t('common.deleteConfirmTitle'),
+                      description: t('weight.deleteConfirm'),
+                      destructive: true,
+                      confirmText: t('common.delete'),
+                    });
+                    if (ok) del.mutate(w._id);
+                  }}
+                  className="grid h-8 w-8 place-items-center rounded-full text-destructive hover:bg-destructive/10"
+                  aria-label={t('common.delete')}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             </div>
-            <div className="flex flex-shrink-0 items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setEditing(w)}
-                className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-                aria-label={t('common.edit') ?? 'Edit'}
-              >
-                <Pencil className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  const ok = await confirm({
-                    title: t('common.deleteConfirmTitle'),
-                    description: t('weight.deleteConfirm'),
-                    destructive: true,
-                    confirmText: t('common.delete'),
-                  });
-                  if (ok) del.mutate(w._id);
-                }}
-                className="grid h-8 w-8 place-items-center rounded-full text-destructive hover:bg-destructive/10"
-                aria-label={t('common.delete')}
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <AddWeightModal open={adding} onClose={() => setAdding(false)} />
       <AddWeightModal open={!!editing} onClose={() => setEditing(null)} weight={editing} />
@@ -260,9 +268,22 @@ function WeightChart({ data }: WeightChartProps) {
         </defs>
         <g className="text-primary">
           <path d={areaPath} fill="url(#weightFill)" />
-          <path d={linePath} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
+          <path
+            d={linePath}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
           {data.map((d, i) => (
-            <circle key={d._id} cx={px(i)} cy={py(d.kg)} r={i === data.length - 1 ? 2.4 : 1.4} fill="currentColor" />
+            <circle
+              key={d._id}
+              cx={px(i)}
+              cy={py(d.kg)}
+              r={i === data.length - 1 ? 2.4 : 1.4}
+              fill="currentColor"
+            />
           ))}
         </g>
       </svg>

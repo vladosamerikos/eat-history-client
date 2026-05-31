@@ -79,9 +79,9 @@ export function FoodCombobox({
   }, [foods, dq]);
 
   return (
-    <div ref={wrapperRef} className="relative">
+    <div ref={wrapperRef} className="relative w-full min-w-0">
       <div
-        className={`flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2.5 transition focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ${
+        className={`flex min-w-0 items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2.5 transition focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ${
           food ? 'pl-2' : ''
         }`}
       >
@@ -106,8 +106,8 @@ export function FoodCombobox({
             if (!open) setOpen(true);
           }}
           onFocus={() => setOpen(true)}
-          placeholder={placeholder ?? (t('meals.pickOrType') ?? 'Elegir comida o escribir')}
-          className="h-7 flex-1 bg-transparent text-sm text-on-background placeholder:text-on-surface-variant/50 focus:outline-none"
+          placeholder={placeholder ?? t('meals.pickOrType') ?? 'Elegir comida o escribir'}
+          className="h-7 min-w-0 flex-1 bg-transparent text-sm text-on-background placeholder:text-on-surface-variant/50 focus:outline-none"
         />
         {q && (
           <button
@@ -169,8 +169,7 @@ export function FoodCombobox({
                       <p className="truncate text-[10px] text-on-surface-variant">
                         {Math.round(f.nutritionPer100.kcal)} kcal/100g · P
                         {Math.round(f.nutritionPer100.protein)} · C
-                        {Math.round(f.nutritionPer100.carbs)} · G
-                        {Math.round(f.nutritionPer100.fat)}
+                        {Math.round(f.nutritionPer100.carbs)} · G{Math.round(f.nutritionPer100.fat)}
                       </p>
                     </div>
                     <span className="flex-shrink-0 text-[10px] uppercase text-on-surface-variant">

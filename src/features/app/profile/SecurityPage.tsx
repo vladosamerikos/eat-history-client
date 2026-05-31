@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Globe, KeyRound, MailCheck, Smartphone, Trash2, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import {
+  Globe,
+  KeyRound,
+  MailCheck,
+  Smartphone,
+  Trash2,
+  AlertTriangle,
+  CheckCircle2,
+} from 'lucide-react';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { resendVerifyEmail } from '@/features/auth/auth.api';
 import {
@@ -22,7 +30,8 @@ function deviceLabel(ua?: string): string {
   if (/iPhone|iPad|iOS/i.test(ua)) return 'iOS · Safari';
   if (/Android/i.test(ua)) return /Chrome/i.test(ua) ? 'Android · Chrome' : 'Android';
   if (/Windows/i.test(ua)) return /Edg/i.test(ua) ? 'Windows · Edge' : 'Windows';
-  if (/Macintosh/i.test(ua)) return /Safari/i.test(ua) && !/Chrome/i.test(ua) ? 'macOS · Safari' : 'macOS';
+  if (/Macintosh/i.test(ua))
+    return /Safari/i.test(ua) && !/Chrome/i.test(ua) ? 'macOS · Safari' : 'macOS';
   if (/Linux/i.test(ua)) return 'Linux';
   return ua.slice(0, 40);
 }
@@ -176,7 +185,10 @@ export function SecurityPage() {
       </Section>
 
       {/* Google */}
-      <Section title={t('settings.security.googleTitle')} description={t('settings.security.googleHelp')}>
+      <Section
+        title={t('settings.security.googleTitle')}
+        description={t('settings.security.googleHelp')}
+      >
         {user?.email ? (
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="inline-flex min-w-0 items-center gap-2 text-sm">
@@ -222,8 +234,10 @@ export function SecurityPage() {
                   <KeyRound className="h-4 w-4" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate break-all font-medium">{p.deviceName || t('settings.passkeys.unnamed')}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="break-words text-sm font-medium leading-tight">
+                    {p.deviceName || t('settings.passkeys.unnamed')}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     {new Date(p.createdAt).toLocaleDateString()}
                   </p>
                 </div>

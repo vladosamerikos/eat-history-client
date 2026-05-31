@@ -25,13 +25,21 @@ export const MACRO_BG = {
   fat: 'bg-rose-400/10',
 } as const;
 
+export const MACRO_BORDER = {
+  kcal: 'border-primary',
+  protein: 'border-primary',
+  carbs: 'border-amber-400',
+  fat: 'border-rose-400',
+} as const;
+
 export type MacroKey = keyof typeof MACRO_ICON;
 
 const round1 = (v: number) => Math.round(v * 10) / 10;
 
 /**
- * Chip grande con tinta de color, icono + label + valor + unidad.
- * Pensado para la cabecera del resumen diario y headers de comida.
+ * Chip vertical con borde de color a la izquierda. Icono arriba, valor grande,
+ * label abajo (ocupa el alto entero, evita desbordes en idiomas largos).
+ * Pensado para la cabecera del resumen diario.
  */
 export function MacroBadge({
   macro,
@@ -45,21 +53,19 @@ export function MacroBadge({
   label?: string;
 }) {
   return (
-    <div className={`flex items-center gap-2 rounded-xl px-3 py-2 ${MACRO_BG[macro]}`}>
+    <div
+      className={`flex min-w-0 flex-col items-center justify-between gap-1 rounded-xl border-l-4 px-2 py-3 text-center ${MACRO_BORDER[macro]} ${MACRO_BG[macro]}`}
+    >
       <MSIcon name={MACRO_ICON[macro] as never} size={20} className={MACRO_TINT[macro]} />
-      <div className="flex min-w-0 flex-col leading-tight">
-        {label && (
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">
-            {label}
-          </span>
-        )}
-        <span className="text-sm font-bold tabular-nums text-on-background">
-          {round1(value)}
-          <span className="ml-0.5 text-[10px] font-medium uppercase text-on-surface-variant">
-            {unit}
-          </span>
+      <span className={`text-base font-bold tabular-nums leading-none ${MACRO_TINT[macro]}`}>
+        {round1(value)}
+        <span className="ml-0.5 text-[10px] font-medium uppercase opacity-80">{unit}</span>
+      </span>
+      {label && (
+        <span className="block w-full break-words text-[10px] font-semibold uppercase leading-tight tracking-wider text-on-surface-variant">
+          {label}
         </span>
-      </div>
+      )}
     </div>
   );
 }

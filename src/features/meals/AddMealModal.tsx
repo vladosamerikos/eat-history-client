@@ -10,7 +10,6 @@ import {
   Loader2,
   Mic,
   Plus,
-  ScanLine,
   Sparkles,
   Trash2,
   X,
@@ -19,6 +18,7 @@ import { MSIcon } from '@/components/ui/MSIcon';
 import { MacroBadge } from '@/components/ui/MacroChips';
 import { MacroInputRow } from '@/components/ui/MacroInputRow';
 import { PhotoSourceSheet } from '@/components/ui/PhotoSourceSheet';
+import { PhotoCard } from '@/components/ui/PhotoCard';
 import { createFood, listFoods, type Food } from '@/features/foods/foods.api';
 import { estimateNutrition, analyzeMealPhoto } from '@/features/ai/ai.api';
 import { useVoice } from '@/features/voice/VoiceContext';
@@ -101,7 +101,12 @@ function effectiveGrams(it: DraftItem): number {
   return num(it.grams);
 }
 
-function computeMacros(it: DraftItem): { kcal: number; protein: number; carbs: number; fat: number } {
+function computeMacros(it: DraftItem): {
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+} {
   if (it.food) {
     const factor = effectiveGrams(it) / 100;
     const np = it.food.nutritionPer100;
@@ -156,7 +161,8 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
   );
   // refs replaced by PhotoSourceSheet
 
-  const needsHydration = isEdit && items.some((it) => !it.food && meal?.entries.some((e) => e.foodId));
+  const needsHydration =
+    isEdit && items.some((it) => !it.food && meal?.entries.some((e) => e.foodId));
   const { data: foods = [] } = useQuery<Food[]>({
     queryKey: ['foods', 'hydrate'],
     queryFn: () => listFoods(),
@@ -363,9 +369,10 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
         throw new Error(t('meals.errors.noEntries') ?? 'Add at least one item');
       }
 
-      const result: Meal = isEdit && meal
-        ? await updateMeal(meal._id, { date, type, entries })
-        : await createMeal({ date, type, entries });
+      const result: Meal =
+        isEdit && meal
+          ? await updateMeal(meal._id, { date, type, entries })
+          : await createMeal({ date, type, entries });
 
       if (photoFile) {
         try {
@@ -496,88 +503,41 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
                 label={t('meals.macros.protein')}
                 value={totals.protein}
               />
-              <MacroBadge
-                macro="carbs"
-                label={t('meals.macros.carbs')}
-                value={totals.carbs}
-              />
-              <MacroBadge
-                macro="fat"
-                label={t('meals.macros.fat')}
-                value={totals.fat}
-              />
+              <MacroBadge macro="carbs" label={t('meals.macros.carbs')} value={totals.carbs} />
+              <MacroBadge macro="fat" label={t('meals.macros.fat')} value={totals.fat} />
             </div>
           </div>
 
           {/* AI Photo Analysis Card */}
-          {previewPhoto ? (
-            <div className="ai-glow relative overflow-hidden rounded-xl">
-              <img src={previewPhoto} alt="" className="aspect-video w-full object-cover" />
-              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-gradient-to-t from-black/80 to-transparent p-3">
-                <button
-                  type="button"
-                  onClick={() => setPhotoSheetOpen(true)}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-full bg-surface-container/90 px-3 text-xs font-semibold text-on-surface backdrop-blur hover:bg-surface-container-high"
-                >
-                  <Camera className="h-3.5 w-3.5" />
-                  {t('meals.photo.change')}
-                </button>
-                <div className="flex items-center gap-2">
-                  <motion.button
-                    type="button"
-                    onClick={analyzeFullPhoto}
-                    disabled={aiBusy === 'global'}
-                    whileTap={{ scale: 0.95 }}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-3.5 text-xs font-semibold text-primary-foreground shadow-lg disabled:opacity-60"
-                  >
-                    {aiBusy === 'global' ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-4 w-4" />
-                    )}
-                    {t('meals.analyzePhoto') ?? 'Analizar'}
-                  </motion.button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPhotoFile(null);
-                      setExistingPhotoUrl(undefined);
-                      setPhotoExplicitlyRemoved(true);
-                    }}
-                    className="grid h-9 w-9 place-items-center rounded-full bg-surface-container/90 text-on-surface backdrop-blur hover:bg-surface-container-high"
-                    aria-label={t('meals.photo.remove')}
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setPhotoSheetOpen(true)}
-              className="ai-glow group glass-panel relative flex h-32 w-full cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-xl p-4"
-            >
-              <div
-                aria-hidden
-                className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-primary-container/5 to-transparent opacity-50"
-              />
-              <div
-                aria-hidden
-                className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-primary/10 blur-2xl"
-              />
-              <div className="z-10 grid h-12 w-12 place-items-center rounded-full bg-surface-container transition-transform group-hover:scale-105">
-                <ScanLine className="h-5 w-5 text-primary" />
-              </div>
-              <span className="z-10 text-sm font-semibold text-primary">
-                {t('meals.aiPhotoTitle') ?? 'AI Análisis por foto'}
-              </span>
-            </button>
-          )}
+          <PhotoCard
+            previewUrl={previewPhoto}
+            onPick={() => setPhotoSheetOpen(true)}
+            onRemove={() => {
+              setPhotoFile(null);
+              setExistingPhotoUrl(undefined);
+              setPhotoExplicitlyRemoved(true);
+            }}
+            emptyLabel={t('meals.aiPhotoTitle') ?? 'AI Análisis por foto'}
+            extraAction={
+              <motion.button
+                type="button"
+                onClick={analyzeFullPhoto}
+                disabled={aiBusy === 'global'}
+                whileTap={{ scale: 0.95 }}
+                className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-3.5 text-xs font-semibold text-primary-foreground shadow-lg disabled:opacity-60"
+              >
+                {aiBusy === 'global' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                {t('meals.analyzePhoto') ?? 'Analizar'}
+              </motion.button>
+            }
+          />
 
           {/* Items Form Card */}
           <div className="relative space-y-6 rounded-xl border border-surface-variant bg-surface-container-low p-6">
-
             <AnimatePresence initial={false}>
               {items.map((it, idx) => {
                 const m = computeMacros(it);
@@ -641,7 +601,11 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
                               className="grid h-8 w-8 place-items-center rounded-md bg-primary/10 text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
                               aria-label={t('meals.ai.fromName') ?? 'IA desde nombre'}
                             >
-                              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                              {busy ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Sparkles className="h-4 w-4" />
+                              )}
                             </button>
                           </div>
                         }
@@ -649,8 +613,8 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
                     </div>
 
                     {/* Qty + grams */}
-                    <div className="flex items-end gap-4">
-                      <div className="flex w-24 flex-col gap-2">
+                    <div className="flex min-w-0 items-end gap-3">
+                      <div className="flex w-20 flex-shrink-0 flex-col gap-2">
                         <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
                           {t('meals.qty') ?? 'Cantidad'}
                         </label>
@@ -661,23 +625,23 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
                           step="0.1"
                           value={it.qty}
                           onChange={(e) => updateItem(it.uid, { qty: e.target.value })}
-                          className="h-10 w-full rounded-lg border border-surface-variant bg-surface-container-low px-3 text-sm text-on-background focus:border-primary focus:outline-none"
+                          className="no-spin h-10 w-full rounded-lg border border-surface-variant bg-surface-container-low px-3 text-sm text-on-background focus:border-primary focus:outline-none"
                         />
                       </div>
-                      <div className="flex flex-1 flex-col gap-2">
+                      <div className="flex min-w-0 flex-1 flex-col gap-2">
                         <label className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
                           {t('meals.gramsPerUnit') ?? 'g / unidad'}
                         </label>
-                        <div className="flex h-10 overflow-hidden rounded-lg border border-surface-variant bg-surface-container-low">
+                        <div className="flex h-10 min-w-0 overflow-hidden rounded-lg border border-surface-variant bg-surface-container-low">
                           <input
                             type="number"
                             inputMode="decimal"
                             min="0"
                             value={it.gramsPerUnit}
                             onChange={(e) => updateItem(it.uid, { gramsPerUnit: e.target.value })}
-                            className="flex-1 border-none bg-transparent px-3 text-sm text-on-background focus:outline-none focus:ring-0"
+                            className="no-spin min-w-0 flex-1 border-none bg-transparent px-3 text-sm text-on-background focus:outline-none focus:ring-0"
                           />
-                          <div className="flex items-center whitespace-nowrap border-l border-surface-variant bg-surface-variant/50 px-3 text-xs font-semibold text-on-surface-variant">
+                          <div className="flex flex-shrink-0 items-center whitespace-nowrap border-l border-surface-variant bg-surface-variant/50 px-2 text-[11px] font-semibold text-on-surface-variant">
                             = {Math.round(totalG)}g
                           </div>
                         </div>
@@ -786,9 +750,9 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
               {save.isPending ? (
                 <Loader2 className="mx-auto h-5 w-5 animate-spin" />
               ) : isEdit ? (
-                t('meals.saveEdit') ?? 'Guardar cambios'
+                (t('meals.saveEdit') ?? 'Guardar cambios')
               ) : (
-                t('meals.addMealCta') ?? t('meals.add') ?? 'Añadir comida'
+                (t('meals.addMealCta') ?? t('meals.add') ?? 'Añadir comida')
               )}
             </button>
           </div>

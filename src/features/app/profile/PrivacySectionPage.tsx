@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { FileText, Scale } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { deleteAccount } from '@/features/auth/auth.api';
-import { PageHeader, Section } from './_shared';
+import { LinkRow, PageHeader, Section } from './_shared';
 import { Alert } from '@/components/ui/Alert';
 
 type Msg = { kind: 'error' | 'success'; text: string } | null;
@@ -47,28 +48,15 @@ export function PrivacySectionPage() {
       />
 
       <Section title={t('settings.privacy.documents')}>
-        <ul className="grid gap-2 text-sm">
-          <li>
-            <Link
-              to="/privacy"
-              target="_blank"
-              rel="noopener"
-              className="block rounded-lg border border-border bg-background px-3 py-2 hover:bg-muted"
-            >
-              {t('settings.privacy.privacyPolicy')}
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/terms"
-              target="_blank"
-              rel="noopener"
-              className="block rounded-lg border border-border bg-background px-3 py-2 hover:bg-muted"
-            >
-              {t('settings.privacy.terms')}
-            </Link>
-          </li>
-        </ul>
+        <div className="grid gap-1">
+          <LinkRow
+            to="/privacy"
+            external
+            icon={FileText}
+            title={t('settings.privacy.privacyPolicy')}
+          />
+          <LinkRow to="/terms" external icon={Scale} title={t('settings.privacy.terms')} />
+        </div>
       </Section>
 
       <Section title={t('settings.danger.title')} description={t('settings.danger.description')}>
@@ -95,7 +83,9 @@ export function PrivacySectionPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <header className="mb-3 flex items-center justify-between gap-2">
-              <h3 className="text-lg font-semibold text-destructive">{t('settings.danger.title')}</h3>
+              <h3 className="text-lg font-semibold text-destructive">
+                {t('settings.danger.title')}
+              </h3>
               <button
                 type="button"
                 onClick={() => !deleting && setShowDelete(false)}
