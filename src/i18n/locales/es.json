@@ -1,5 +1,23 @@
 {
-  "common": { "cancel": "Cancelar", "save": "Guardar", "close": "Cerrar", "back": "Volver", "loading": "Cargando…", "empty": "Sin resultados.", "remove": "Quitar", "edit": "Editar", "notes": "Notas", "confirm": "Confirmar", "delete": "Eliminar", "deleteConfirmTitle": "¿Eliminar?", "deleteConfirmDesc": "Esta acción no se puede deshacer.", "saved": "Guardado", "errorGeneric": "Algo falló. Inténtalo de nuevo.", "send": "Enviar", "clear": "Limpiar" },
+  "common": {
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "close": "Cerrar",
+    "back": "Volver",
+    "loading": "Cargando…",
+    "empty": "Sin resultados.",
+    "remove": "Quitar",
+    "edit": "Editar",
+    "notes": "Notas",
+    "confirm": "Confirmar",
+    "delete": "Eliminar",
+    "deleteConfirmTitle": "¿Eliminar?",
+    "deleteConfirmDesc": "Esta acción no se puede deshacer.",
+    "saved": "Guardado",
+    "errorGeneric": "Algo falló. Inténtalo de nuevo.",
+    "send": "Enviar",
+    "clear": "Limpiar"
+  },
   "welcome": {
     "greeting": "Bienvenido",
     "tagline": "Tu nutrición, tu historia.",
@@ -84,11 +102,26 @@
     "lastUpdated": "Última actualización: {{date}}",
     "intro": "Estos términos regulan el uso de eat-history. Al usar el servicio aceptas estas condiciones.",
     "sections": {
-      "use": { "title": "Uso del servicio", "body": "eat-history es una herramienta personal para registrar comidas. No es consejo médico ni nutricional profesional." },
-      "account": { "title": "Cuenta", "body": "Eres responsable de mantener la confidencialidad de tu cuenta y contraseña." },
-      "data": { "title": "Tus datos", "body": "Tus comidas y datos personales se guardan según nuestra Política de Privacidad. Puedes solicitar eliminar tu cuenta en cualquier momento." },
-      "liability": { "title": "Limitación de responsabilidad", "body": "El servicio se ofrece «tal cual» sin garantías. No nos hacemos responsables de decisiones tomadas a partir de los datos mostrados." },
-      "contact": { "title": "Contacto", "body": "Para cualquier consulta escribe a admin@vladys.dev." }
+      "use": {
+        "title": "Uso del servicio",
+        "body": "eat-history es una herramienta personal para registrar comidas. No es consejo médico ni nutricional profesional."
+      },
+      "account": {
+        "title": "Cuenta",
+        "body": "Eres responsable de mantener la confidencialidad de tu cuenta y contraseña."
+      },
+      "data": {
+        "title": "Tus datos",
+        "body": "Tus comidas y datos personales se guardan según nuestra Política de Privacidad. Puedes solicitar eliminar tu cuenta en cualquier momento."
+      },
+      "liability": {
+        "title": "Limitación de responsabilidad",
+        "body": "El servicio se ofrece «tal cual» sin garantías. No nos hacemos responsables de decisiones tomadas a partir de los datos mostrados."
+      },
+      "contact": {
+        "title": "Contacto",
+        "body": "Para cualquier consulta escribe a admin@vladys.dev."
+      }
     }
   },
   "privacy": {
@@ -96,13 +129,34 @@
     "linkShort": "política de privacidad",
     "lastUpdated": "Última actualización: {{date}}",
     "sections": {
-      "controller": { "title": "Responsable", "body": "El responsable del tratamiento es el equipo de eat-history. Contacto: admin@vladys.dev." },
-      "data": { "title": "Datos que tratamos", "body": "Email, nombre, idioma, registros de comidas, suscripciones de notificaciones push y metadatos técnicos (IP, user-agent) para seguridad." },
-      "purpose": { "title": "Finalidad", "body": "Prestar el servicio, autenticarte, enviarte recordatorios y mejorar la app." },
-      "legal": { "title": "Base legal", "body": "Ejecución del contrato y consentimiento (notificaciones)." },
-      "retention": { "title": "Conservación", "body": "Mientras tengas la cuenta activa. Puedes pedir la eliminación cuando quieras." },
-      "rights": { "title": "Tus derechos", "body": "Acceso, rectificación, supresión, portabilidad, oposición. Escribe a admin@vladys.dev." },
-      "providers": { "title": "Proveedores", "body": "Email transaccional con Resend. Almacenamiento en MongoDB en infraestructura propia." }
+      "controller": {
+        "title": "Responsable",
+        "body": "El responsable del tratamiento es el equipo de eat-history. Contacto: admin@vladys.dev."
+      },
+      "data": {
+        "title": "Datos que tratamos",
+        "body": "Email, nombre, idioma, registros de comidas, suscripciones de notificaciones push y metadatos técnicos (IP, user-agent) para seguridad."
+      },
+      "purpose": {
+        "title": "Finalidad",
+        "body": "Prestar el servicio, autenticarte, enviarte recordatorios y mejorar la app."
+      },
+      "legal": {
+        "title": "Base legal",
+        "body": "Ejecución del contrato y consentimiento (notificaciones)."
+      },
+      "retention": {
+        "title": "Conservación",
+        "body": "Mientras tengas la cuenta activa. Puedes pedir la eliminación cuando quieras."
+      },
+      "rights": {
+        "title": "Tus derechos",
+        "body": "Acceso, rectificación, supresión, portabilidad, oposición. Escribe a admin@vladys.dev."
+      },
+      "providers": {
+        "title": "Proveedores",
+        "body": "Email transaccional con Resend. Almacenamiento en MongoDB en infraestructura propia."
+      }
     }
   },
   "cookies": {
@@ -150,15 +204,40 @@
   "onboarding": {
     "continue": "Continuar",
     "locale": { "title": "Elige tu idioma", "help": "Personalizaremos la app a tu idioma." },
-    "name": { "title": "¿Cómo te llamas?", "help": "Te llamaremos así.", "placeholder": "Tu nombre" },
+    "name": {
+      "title": "¿Cómo te llamas?",
+      "help": "Te llamaremos así.",
+      "placeholder": "Tu nombre"
+    },
     "goal": { "title": "¿Cuál es tu objetivo?", "help": "Adaptaremos las recomendaciones." },
-    "preferences": { "title": "Preferencias dietéticas", "help": "Ajustaremos las sugerencias de comida." },
+    "preferences": {
+      "title": "Preferencias dietéticas",
+      "help": "Ajustaremos las sugerencias de comida."
+    },
     "done": { "title": "¡Listo!", "help": "Empezamos." },
     "locales": { "en": "English", "es": "Español", "uk": "Українська" },
-    "goals": { "lose": "Perder peso", "maintain": "Mantenerme", "gain": "Ganar masa", "health": "Comer mejor" },
-    "diets": { "omnivore": "Omnívoro", "vegetarian": "Vegetariano", "vegan": "Vegano", "pescatarian": "Pescetariano", "keto": "Keto" }
+    "goals": {
+      "lose": "Perder peso",
+      "maintain": "Mantenerme",
+      "gain": "Ganar masa",
+      "health": "Comer mejor"
+    },
+    "diets": {
+      "omnivore": "Omnívoro",
+      "vegetarian": "Vegetariano",
+      "vegan": "Vegano",
+      "pescatarian": "Pescetariano",
+      "keto": "Keto"
+    }
   },
-  "nav": { "today": "Hoy", "foods": "Comidas", "weight": "Peso", "chat": "Chat", "profile": "Perfil", "settings": "Ajustes" },
+  "nav": {
+    "today": "Hoy",
+    "foods": "Comidas",
+    "weight": "Peso",
+    "chat": "Chat",
+    "profile": "Perfil",
+    "settings": "Ajustes"
+  },
   "chat": {
     "title": "Chat con IA",
     "placeholder": "Escribe un mensaje…",
@@ -237,7 +316,11 @@
   },
   "settings": {
     "account": { "title": "Cuenta", "name": "Nombre", "email": "Email" },
-    "language": { "title": "Idioma", "help": "Cambia el idioma de la aplicación.", "saved": "Idioma actualizado." },
+    "language": {
+      "title": "Idioma",
+      "help": "Cambia el idioma de la aplicación.",
+      "saved": "Idioma actualizado."
+    },
     "units": {
       "title": "Unidades",
       "help": "Elige tu sistema métrico o imperial para peso, volumen y altura.",
@@ -318,7 +401,17 @@
     "tomorrow": "Mañana",
     "swipeHint": "Desliza para cambiar de día",
     "types": { "breakfast": "Desayuno", "lunch": "Comida", "snack": "Merienda", "dinner": "Cena" },
-    "photo": { "add": "Añadir foto", "change": "Cambiar foto", "remove": "Quitar foto", "uploading": "Subiendo foto…", "generalHint": "Foto del plato completo (opcional)", "takeOrUpload": "Añadir foto", "takePhoto": "Tomar foto", "uploadFromGallery": "Subir desde galería", "analyzeItem": "Analizar ingrediente por foto" },
+    "photo": {
+      "add": "Añadir foto",
+      "change": "Cambiar foto",
+      "remove": "Quitar foto",
+      "uploading": "Subiendo foto…",
+      "generalHint": "Foto del plato completo (opcional)",
+      "takeOrUpload": "Añadir foto",
+      "takePhoto": "Tomar foto",
+      "uploadFromGallery": "Subir desde galería",
+      "analyzeItem": "Analizar ingrediente por foto"
+    },
     "edit": "Editar",
     "saveEdit": "Guardar cambios",
     "addItem": "Añadir producto",
@@ -327,7 +420,12 @@
     "pickOrType": "Elegir comida o escribir",
     "picker": { "title": "Elegir comida", "search": "Buscar comida…" },
     "entryPhoto": { "add": "Foto del producto", "change": "Cambiar foto" },
-    "ai": { "fromPhoto": "IA desde foto", "fromName": "IA desde nombre", "needsPhoto": "Añade una foto primero", "needsName": "Escribe el nombre primero" },
+    "ai": {
+      "fromPhoto": "IA desde foto",
+      "fromName": "IA desde nombre",
+      "needsPhoto": "Añade una foto primero",
+      "needsName": "Escribe el nombre primero"
+    },
     "errors": { "noEntries": "Añade al menos un producto.", "noName": "Añade un nombre primero." },
     "saveAsFood": "Guardar en mi catálogo",
     "savedAsFood": "“{{name}}” guardado en tu catálogo",
@@ -374,7 +472,21 @@
     "defaultDevice": "Predeterminado",
     "outputDeviceUnsupported": "Tu navegador no permite cambiar el altavoz.",
     "photoSent": "📷 Foto adjuntada",
-    "photoAnnounce": "He adjuntado una foto de mi plato. Analízala y regístrala: {{url}}"
+    "photoAnnounce": "He adjuntado una foto de mi plato. Analízala y regístrala: {{url}}",
+    "startVoiceMode": "Hablar con el asistente",
+    "dictateStart": "Dictar mensaje",
+    "dictateStop": "Detener dictado",
+    "modelLabel": "Modelo",
+    "modelDefault": "Por defecto",
+    "ttsEngineLabel": "Voz",
+    "ttsEngine": {
+      "chirp3": "Natural (Chirp 3)",
+      "journey": "Conversacional (Journey)",
+      "neural2": "Estándar (Neural2)"
+    },
+    "languageLabel": "Idioma",
+    "lang": { "es": "Español", "en": "Inglés", "uk": "Ucraniano" },
+    "prefsApplyNextSession": "Los cambios de modelo y voz se aplican al iniciar una nueva sesión."
   },
   "foods": {
     "title": "Mis comidas",
@@ -388,9 +500,21 @@
     "delete": "Eliminar",
     "empty": "Tu catálogo está vacío. Añade tus comidas frecuentes para registrarlas rápido.",
     "search": "Buscar…",
-    "fields": { "name": "Nombre", "kcal100": "kcal/100g", "protein": "Proteína", "carbs": "Carbs", "fat": "Grasa", "portion": "Porción (g)" },
+    "fields": {
+      "name": "Nombre",
+      "kcal100": "kcal/100g",
+      "protein": "Proteína",
+      "carbs": "Carbs",
+      "fat": "Grasa",
+      "portion": "Porción (g)"
+    },
     "per100Hint": "Los macros son por 100g. La porción se usa como cantidad por defecto al registrar.",
-    "ai": { "fromName": "IA desde nombre", "fromPhoto": "IA desde foto", "needsName": "Escribe el nombre primero", "needsPhoto": "Añade una foto primero" },
+    "ai": {
+      "fromName": "IA desde nombre",
+      "fromPhoto": "IA desde foto",
+      "needsName": "Escribe el nombre primero",
+      "needsPhoto": "Añade una foto primero"
+    },
     "photo": { "add": "Añadir foto", "change": "Cambiar foto", "remove": "Quitar foto" }
   },
   "admin": {

@@ -32,6 +32,7 @@ export interface PublicUser {
   reminderTimezone?: string;
   aiModelPreferences?: { vision?: string; text?: string; chat?: string };
   units?: UnitPreferences;
+  voicePreferences?: { model?: string; ttsEngine?: 'chirp3' | 'journey' | 'neural2' };
 }
 
 interface AuthState {

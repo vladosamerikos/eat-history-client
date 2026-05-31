@@ -6,6 +6,7 @@ export interface UpdateSettingsInput {
   reminderTimes?: Partial<{ breakfast: string; lunch: string; snack: string; dinner: string }>;
   reminderTimezone?: string;
   locale?: string;
+  voicePreferences?: { model?: string; ttsEngine?: 'chirp3' | 'journey' | 'neural2' };
 }
 
 export async function updateSettings(input: UpdateSettingsInput): Promise<PublicUser> {

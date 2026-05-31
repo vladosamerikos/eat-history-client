@@ -1,5 +1,23 @@
 {
-  "common": { "cancel": "Cancel", "save": "Save", "close": "Close", "back": "Back", "loading": "Loading…", "empty": "No results.", "remove": "Remove", "edit": "Edit", "notes": "Notes", "confirm": "Confirm", "delete": "Delete", "deleteConfirmTitle": "Delete?", "deleteConfirmDesc": "This action cannot be undone.", "saved": "Saved", "errorGeneric": "Something went wrong. Please try again.", "send": "Send", "clear": "Clear" },
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "back": "Back",
+    "loading": "Loading…",
+    "empty": "No results.",
+    "remove": "Remove",
+    "edit": "Edit",
+    "notes": "Notes",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "deleteConfirmTitle": "Delete?",
+    "deleteConfirmDesc": "This action cannot be undone.",
+    "saved": "Saved",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "send": "Send",
+    "clear": "Clear"
+  },
   "welcome": {
     "greeting": "Welcome",
     "tagline": "Your nutrition, your story.",
@@ -83,10 +101,22 @@
     "lastUpdated": "Last updated: {{date}}",
     "intro": "These terms govern the use of eat-history. By using the service you accept them.",
     "sections": {
-      "use": { "title": "Use of the service", "body": "eat-history is a personal tool to log meals. It is not professional medical or nutrition advice." },
-      "account": { "title": "Account", "body": "You are responsible for keeping your credentials confidential." },
-      "data": { "title": "Your data", "body": "Your meals and personal data are stored as described in our Privacy Policy. You can request account deletion anytime." },
-      "liability": { "title": "Liability", "body": "Service is offered \"as is\" without warranties. We are not liable for decisions based on the data shown." },
+      "use": {
+        "title": "Use of the service",
+        "body": "eat-history is a personal tool to log meals. It is not professional medical or nutrition advice."
+      },
+      "account": {
+        "title": "Account",
+        "body": "You are responsible for keeping your credentials confidential."
+      },
+      "data": {
+        "title": "Your data",
+        "body": "Your meals and personal data are stored as described in our Privacy Policy. You can request account deletion anytime."
+      },
+      "liability": {
+        "title": "Liability",
+        "body": "Service is offered \"as is\" without warranties. We are not liable for decisions based on the data shown."
+      },
       "contact": { "title": "Contact", "body": "For any question email admin@vladys.dev." }
     }
   },
@@ -95,13 +125,34 @@
     "linkShort": "privacy policy",
     "lastUpdated": "Last updated: {{date}}",
     "sections": {
-      "controller": { "title": "Controller", "body": "The data controller is the eat-history team. Contact: admin@vladys.dev." },
-      "data": { "title": "Data we process", "body": "Email, name, language, meal logs, push subscriptions, and technical metadata (IP, user-agent) for security." },
-      "purpose": { "title": "Purpose", "body": "Provide the service, authenticate you, send reminders and improve the app." },
-      "legal": { "title": "Legal basis", "body": "Contract performance and consent (notifications)." },
-      "retention": { "title": "Retention", "body": "While your account is active. Request deletion anytime." },
-      "rights": { "title": "Your rights", "body": "Access, rectification, deletion, portability, objection. Write to admin@vladys.dev." },
-      "providers": { "title": "Providers", "body": "Transactional email with Resend. Storage in self-hosted MongoDB." }
+      "controller": {
+        "title": "Controller",
+        "body": "The data controller is the eat-history team. Contact: admin@vladys.dev."
+      },
+      "data": {
+        "title": "Data we process",
+        "body": "Email, name, language, meal logs, push subscriptions, and technical metadata (IP, user-agent) for security."
+      },
+      "purpose": {
+        "title": "Purpose",
+        "body": "Provide the service, authenticate you, send reminders and improve the app."
+      },
+      "legal": {
+        "title": "Legal basis",
+        "body": "Contract performance and consent (notifications)."
+      },
+      "retention": {
+        "title": "Retention",
+        "body": "While your account is active. Request deletion anytime."
+      },
+      "rights": {
+        "title": "Your rights",
+        "body": "Access, rectification, deletion, portability, objection. Write to admin@vladys.dev."
+      },
+      "providers": {
+        "title": "Providers",
+        "body": "Transactional email with Resend. Storage in self-hosted MongoDB."
+      }
     }
   },
   "cookies": {
@@ -149,15 +200,37 @@
   "onboarding": {
     "continue": "Continue",
     "locale": { "title": "Choose your language", "help": "We will personalize the app for you." },
-    "name": { "title": "What's your name?", "help": "We will call you this.", "placeholder": "Your name" },
+    "name": {
+      "title": "What's your name?",
+      "help": "We will call you this.",
+      "placeholder": "Your name"
+    },
     "goal": { "title": "What's your goal?", "help": "We tailor recommendations." },
     "preferences": { "title": "Dietary preferences", "help": "We adjust meal suggestions." },
     "done": { "title": "All set!", "help": "Let's go." },
     "locales": { "en": "English", "es": "Español", "uk": "Українська" },
-    "goals": { "lose": "Lose weight", "maintain": "Maintain", "gain": "Gain muscle", "health": "Eat healthier" },
-    "diets": { "omnivore": "Omnivore", "vegetarian": "Vegetarian", "vegan": "Vegan", "pescatarian": "Pescatarian", "keto": "Keto" }
+    "goals": {
+      "lose": "Lose weight",
+      "maintain": "Maintain",
+      "gain": "Gain muscle",
+      "health": "Eat healthier"
+    },
+    "diets": {
+      "omnivore": "Omnivore",
+      "vegetarian": "Vegetarian",
+      "vegan": "Vegan",
+      "pescatarian": "Pescatarian",
+      "keto": "Keto"
+    }
   },
-  "nav": { "today": "Today", "foods": "Foods", "weight": "Weight", "chat": "Chat", "profile": "Profile", "settings": "Settings" },
+  "nav": {
+    "today": "Today",
+    "foods": "Foods",
+    "weight": "Weight",
+    "chat": "Chat",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
   "chat": {
     "title": "AI chat",
     "placeholder": "Write a message…",
@@ -236,7 +309,11 @@
   },
   "settings": {
     "account": { "title": "Account", "name": "Name", "email": "Email" },
-    "language": { "title": "Language", "help": "Change the application language.", "saved": "Language updated." },
+    "language": {
+      "title": "Language",
+      "help": "Change the application language.",
+      "saved": "Language updated."
+    },
     "units": {
       "title": "Units",
       "help": "Choose metric or imperial system for weight, volume and height.",
@@ -317,7 +394,17 @@
     "tomorrow": "Tomorrow",
     "swipeHint": "Swipe to change day",
     "types": { "breakfast": "Breakfast", "lunch": "Lunch", "snack": "Snack", "dinner": "Dinner" },
-    "photo": { "add": "Add photo", "change": "Change photo", "remove": "Remove photo", "uploading": "Uploading photo…", "generalHint": "Photo of the whole plate (optional)", "takeOrUpload": "Add photo", "takePhoto": "Take photo", "uploadFromGallery": "Upload from gallery", "analyzeItem": "Analyze ingredient with photo" },
+    "photo": {
+      "add": "Add photo",
+      "change": "Change photo",
+      "remove": "Remove photo",
+      "uploading": "Uploading photo…",
+      "generalHint": "Photo of the whole plate (optional)",
+      "takeOrUpload": "Add photo",
+      "takePhoto": "Take photo",
+      "uploadFromGallery": "Upload from gallery",
+      "analyzeItem": "Analyze ingredient with photo"
+    },
     "edit": "Edit",
     "saveEdit": "Save changes",
     "addItem": "Add item",
@@ -326,7 +413,12 @@
     "pickOrType": "Pick a food or type",
     "picker": { "title": "Pick a food", "search": "Search food…" },
     "entryPhoto": { "add": "Item photo", "change": "Change photo" },
-    "ai": { "fromPhoto": "AI from photo", "fromName": "AI from name", "needsPhoto": "Add a photo first", "needsName": "Type the name first" },
+    "ai": {
+      "fromPhoto": "AI from photo",
+      "fromName": "AI from name",
+      "needsPhoto": "Add a photo first",
+      "needsName": "Type the name first"
+    },
     "errors": { "noEntries": "Add at least one item.", "noName": "Add a name first." },
     "saveAsFood": "Save to my catalog",
     "savedAsFood": "“{{name}}” saved to your catalog",
@@ -373,7 +465,21 @@
     "defaultDevice": "Default",
     "outputDeviceUnsupported": "Your browser does not allow changing the speaker.",
     "photoSent": "📷 Photo attached",
-    "photoAnnounce": "I attached a photo of my meal. Analyze it and log it: {{url}}"
+    "photoAnnounce": "I attached a photo of my meal. Analyze it and log it: {{url}}",
+    "startVoiceMode": "Talk to the assistant",
+    "dictateStart": "Dictate message",
+    "dictateStop": "Stop dictation",
+    "modelLabel": "Model",
+    "modelDefault": "Default",
+    "ttsEngineLabel": "Voice",
+    "ttsEngine": {
+      "chirp3": "Natural (Chirp 3)",
+      "journey": "Conversational (Journey)",
+      "neural2": "Standard (Neural2)"
+    },
+    "languageLabel": "Language",
+    "lang": { "es": "Spanish", "en": "English", "uk": "Ukrainian" },
+    "prefsApplyNextSession": "Model and voice changes apply when starting a new session."
   },
   "foods": {
     "title": "My foods",
@@ -387,9 +493,21 @@
     "delete": "Delete",
     "empty": "Your catalog is empty. Add foods you eat often to log them quickly.",
     "search": "Search…",
-    "fields": { "name": "Name", "kcal100": "kcal/100g", "protein": "Protein", "carbs": "Carbs", "fat": "Fat", "portion": "Portion (g)" },
+    "fields": {
+      "name": "Name",
+      "kcal100": "kcal/100g",
+      "protein": "Protein",
+      "carbs": "Carbs",
+      "fat": "Fat",
+      "portion": "Portion (g)"
+    },
     "per100Hint": "Macros are per 100g. The portion is only used as default amount when logging.",
-    "ai": { "fromName": "AI from name", "fromPhoto": "AI from photo", "needsName": "Type the name first", "needsPhoto": "Add a photo first" },
+    "ai": {
+      "fromName": "AI from name",
+      "fromPhoto": "AI from photo",
+      "needsName": "Type the name first",
+      "needsPhoto": "Add a photo first"
+    },
     "photo": { "add": "Add photo", "change": "Change photo", "remove": "Remove photo" }
   },
   "admin": {

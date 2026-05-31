@@ -27,7 +27,11 @@ import {
   type Participant,
 } from 'livekit-client';
 import { useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { uploadStandalonePhoto } from '@/features/meals/meals.api';
+import { listAiModels } from '@/features/ai/ai.api';
+import { updateSettings } from '@/features/app/settings.api';
+import { useAuthStore } from '@/features/auth/auth.store';
 import { ImageLightbox } from '@/components/ui/ImageLightbox';
 import { PhotoSourceSheet } from '@/components/ui/PhotoSourceSheet';
 import { createVoiceSession } from './voice.api';
@@ -35,6 +39,9 @@ import { useVoice } from './VoiceContext';
 import { VoiceVisualizer } from './VoiceVisualizer';
 
 type Status = 'idle' | 'connecting' | 'connected' | 'agent-waiting' | 'ended' | 'error';
+
+const TTS_ENGINES = ['chirp3', 'journey', 'neural2'] as const;
+const VOICE_LANGS = ['es', 'en', 'uk'] as const;
 
 interface ChatMessage {
   id: string;
@@ -72,6 +79,19 @@ export function VoiceDrawer() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const { isOpen, isMinimized, options, minimize, close } = useVoice();
+
+  const isChatAgent = options.agent === 'chat';
+  const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
+  const [savingPrefs, setSavingPrefs] = useState(false);
+
+  // Modelos LLM disponibles para el coach por voz (solo agente 'chat').
+  const modelsQ = useQuery({
+    queryKey: ['ai', 'models'],
+    queryFn: listAiModels,
+    enabled: isChatAgent && isOpen,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -140,7 +160,11 @@ export function VoiceDrawer() {
       setMessages([]);
       setAgentSpeaking(false);
       try {
-        const session = await createVoiceSession(pickLocale(i18n.language), options.photoUrl);
+        const session = await createVoiceSession({
+          locale: pickLocale(i18n.language),
+          photoUrl: options.photoUrl,
+          agent: options.agent,
+        });
         if (cancelled) return;
 
         const room = new Room({ adaptiveStream: true, dynacast: true });
@@ -153,19 +177,17 @@ export function VoiceDrawer() {
           qc.invalidateQueries({ queryKey: ['weights'] });
         });
 
-        room.on(
-          RoomEvent.ParticipantConnected,
-          (p: RemoteParticipant) => {
-            if (p.identity?.startsWith('agent')) {
-              setStatus((prev) => (prev === 'agent-waiting' ? 'connected' : prev));
-            }
-          },
-        );
+        room.on(RoomEvent.ParticipantConnected, (p: RemoteParticipant) => {
+          if (p.identity?.startsWith('agent')) {
+            setStatus((prev) => (prev === 'agent-waiting' ? 'connected' : prev));
+          }
+        });
 
         room.on(
           RoomEvent.TrackSubscribed,
           (track: RemoteTrack, _pub: RemoteTrackPublication, participant: RemoteParticipant) => {
-            if (track.kind !== Track.Kind.Audio || !participant.identity.startsWith('agent')) return;
+            if (track.kind !== Track.Kind.Audio || !participant.identity.startsWith('agent'))
+              return;
             const audio = track as RemoteAudioTrack;
             const el = audio.attach();
             el.autoplay = true;
@@ -217,8 +239,7 @@ export function VoiceDrawer() {
               for (const seg of segments) {
                 const idx = next.findIndex((m) => m.id === seg.id);
                 const urlMatch = seg.text.match(URL_REGEX);
-                const photoUrl =
-                  urlMatch && IMAGE_EXT.test(urlMatch[1]) ? urlMatch[1] : undefined;
+                const photoUrl = urlMatch && IMAGE_EXT.test(urlMatch[1]) ? urlMatch[1] : undefined;
                 if (idx >= 0) {
                   next[idx] = { ...next[idx], text: seg.text, final: seg.final, photoUrl };
                 } else {
@@ -352,6 +373,34 @@ export function VoiceDrawer() {
       setPhotoUploading(false);
     }
   };
+
+  const savePrefsAndReconnectHint = useCallback(
+    async (patch: {
+      model?: string;
+      ttsEngine?: (typeof TTS_ENGINES)[number];
+      locale?: string;
+    }) => {
+      setSavingPrefs(true);
+      try {
+        const body: Parameters<typeof updateSettings>[0] = {};
+        if (patch.locale) body.locale = patch.locale;
+        if (patch.model !== undefined || patch.ttsEngine !== undefined) {
+          body.voicePreferences = {
+            ...(patch.model !== undefined ? { model: patch.model } : {}),
+            ...(patch.ttsEngine !== undefined ? { ttsEngine: patch.ttsEngine } : {}),
+          };
+        }
+        const updated = await updateSettings(body);
+        setUser(updated);
+        if (patch.locale) await i18n.changeLanguage(patch.locale);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+      } finally {
+        setSavingPrefs(false);
+      }
+    },
+    [i18n, setUser],
+  );
 
   const onPickInputDevice = async (deviceId: string) => {
     setSelectedInputId(deviceId);
@@ -610,7 +659,9 @@ export function VoiceDrawer() {
                   disabled={status !== 'connected'}
                   onClick={toggleMute}
                   className="btn-press grid h-14 w-14 place-items-center rounded-full border border-outline-variant/30 bg-surface-container text-on-surface transition hover:bg-surface-container-high disabled:opacity-50"
-                  aria-label={muted ? (t('voice.unmute') ?? 'Activar') : (t('voice.mute') ?? 'Silenciar')}
+                  aria-label={
+                    muted ? (t('voice.unmute') ?? 'Activar') : (t('voice.mute') ?? 'Silenciar')
+                  }
                 >
                   {muted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
                 </button>
@@ -637,11 +688,7 @@ export function VoiceDrawer() {
                       : (t('voice.muteSpeaker') ?? 'Silenciar altavoz')
                   }
                 >
-                  {speakerMuted ? (
-                    <VolumeX className="h-6 w-6" />
-                  ) : (
-                    <Volume2 className="h-6 w-6" />
-                  )}
+                  {speakerMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
                 </button>
               </div>
             </footer>
@@ -764,6 +811,73 @@ export function VoiceDrawer() {
                 </button>
               </div>
               <div className="space-y-4 px-5 pb-4">
+                {isChatAgent ? (
+                  <>
+                    <div>
+                      <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
+                        {t('voice.modelLabel') ?? 'Modelo'}
+                      </label>
+                      <select
+                        value={user?.voicePreferences?.model ?? ''}
+                        disabled={savingPrefs}
+                        onChange={(e) => void savePrefsAndReconnectHint({ model: e.target.value })}
+                        className="h-11 w-full rounded-lg border border-outline-variant bg-surface-container px-3 text-sm text-on-background focus:border-primary focus:outline-none disabled:opacity-60"
+                      >
+                        <option value="">{t('voice.modelDefault') ?? 'Por defecto'}</option>
+                        {(modelsQ.data ?? [])
+                          .filter((m) => m.capabilities?.includes('text'))
+                          .map((m) => (
+                            <option key={m.modelId} value={m.modelId}>
+                              {m.displayName}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
+                        {t('voice.ttsEngineLabel') ?? 'Voz'}
+                      </label>
+                      <select
+                        value={user?.voicePreferences?.ttsEngine ?? 'chirp3'}
+                        disabled={savingPrefs}
+                        onChange={(e) =>
+                          void savePrefsAndReconnectHint({
+                            ttsEngine: e.target.value as (typeof TTS_ENGINES)[number],
+                          })
+                        }
+                        className="h-11 w-full rounded-lg border border-outline-variant bg-surface-container px-3 text-sm text-on-background focus:border-primary focus:outline-none disabled:opacity-60"
+                      >
+                        {TTS_ENGINES.map((eng) => (
+                          <option key={eng} value={eng}>
+                            {t(`voice.ttsEngine.${eng}`)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
+                        {t('voice.languageLabel') ?? 'Idioma'}
+                      </label>
+                      <select
+                        value={pickLocale(i18n.language)}
+                        disabled={savingPrefs}
+                        onChange={(e) => void savePrefsAndReconnectHint({ locale: e.target.value })}
+                        className="h-11 w-full rounded-lg border border-outline-variant bg-surface-container px-3 text-sm text-on-background focus:border-primary focus:outline-none disabled:opacity-60"
+                      >
+                        {VOICE_LANGS.map((lng) => (
+                          <option key={lng} value={lng}>
+                            {t(`voice.lang.${lng}`)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <p className="text-[11px] text-on-surface-variant">
+                      {t('voice.prefsApplyNextSession') ??
+                        'Los cambios de modelo y voz se aplican al iniciar una nueva sesión.'}
+                    </p>
+                    <div className="h-px bg-outline-variant/60" />
+                  </>
+                ) : null}
                 <div>
                   <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
                     {t('voice.inputDevice') ?? 'Micrófono'}

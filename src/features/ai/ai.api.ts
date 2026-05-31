@@ -62,10 +62,8 @@ export interface AnalyzeMealResult {
 
 export const listAiModels = () => api<AiModelDto[]>(`/ai/models`);
 
-export const updateAiPreference = (body: {
-  vision?: string | null;
-  text?: string | null;
-}) => api(`/ai/preference`, { method: 'PATCH', json: body });
+export const updateAiPreference = (body: { vision?: string | null; text?: string | null }) =>
+  api(`/ai/preference`, { method: 'PATCH', json: body });
 
 /**
  * Llama al endpoint de estimación. Acepta cualquier combinación entre imagen,
@@ -123,8 +121,39 @@ export async function analyzeMealPhoto(input: {
   return (await res.json()) as AnalyzeMealResult;
 }
 
-// ---- Admin ----
+// ---- STT (dictado de voz) ----
 
+/**
+ * Transcribe un clip de audio a texto vía backend (Gemini). Pensado para el
+ * dictado de mensajes en el chat.
+ */
+export async function transcribeAudio(input: {
+  blob: Blob;
+  locale?: string;
+}): Promise<{ text: string; modelUsed: string }> {
+  const token = useAuthStore.getState().accessToken;
+  const fd = new FormData();
+  const ext = input.blob.type.includes('ogg')
+    ? 'ogg'
+    : input.blob.type.includes('mp4') || input.blob.type.includes('m4a')
+      ? 'm4a'
+      : 'webm';
+  fd.append('file', input.blob, `dictation.${ext}`);
+  if (input.locale) fd.append('locale', input.locale);
+  const res = await fetch(`${env.apiBaseUrl}/ai/transcribe`, {
+    method: 'POST',
+    body: fd,
+    credentials: 'include',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`AI transcribe failed (${res.status}): ${txt}`);
+  }
+  return (await res.json()) as { text: string; modelUsed: string };
+}
+
+// ---- Admin ----
 export const adminListAiModels = (params: { provider?: AiProvider; q?: string } = {}) => {
   const sp = new URLSearchParams();
   if (params.provider) sp.set('provider', params.provider);

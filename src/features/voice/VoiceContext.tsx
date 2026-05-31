@@ -1,17 +1,16 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
 export interface VoiceOpenOptions {
   /** Callback que dispara invalidaciones al cerrar / cambiar datos. */
   onChanged?: () => void;
   /** URL de foto a pasar al agente (iteración 2). */
   photoUrl?: string;
+  /**
+   * Qué agente atiende la sesión:
+   * - 'meal' (por defecto): registro rápido de comidas (agentName=eat-history).
+   * - 'chat': coach conversacional configurable (agentName=eat-history-chat).
+   */
+  agent?: 'meal' | 'chat';
 }
 
 interface VoiceContextValue {

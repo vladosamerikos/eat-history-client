@@ -11,12 +11,15 @@ import {
   ChevronUp,
   ImagePlus,
   Loader2,
+  AudioLines,
   MessageCircle,
+  Mic,
   MoreHorizontal,
   Pencil,
   Plus,
   Send,
   Sparkles,
+  Square,
   Trash2,
   X,
 } from 'lucide-react';
@@ -36,6 +39,8 @@ import {
 } from './chat.api';
 import { listAiModels } from '@/features/ai/ai.api';
 import { useAuthStore } from '@/features/auth/auth.store';
+import { useVoice } from '@/features/voice/VoiceContext';
+import { useDictation } from '@/features/voice/useDictation';
 import { Select } from '@/components/ui/Select';
 import { ImageLightbox } from '@/components/ui/ImageLightbox';
 import { cn } from '@/lib/cn';
@@ -120,6 +125,16 @@ export function ChatPage() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const voice = useVoice();
+  const dictation = useDictation({
+    locale: i18n.language.split('-')[0],
+    onResult: (transcript) => {
+      setText((prev) => (prev ? `${prev.trimEnd()} ${transcript}` : transcript));
+      inputRef.current?.focus();
+    },
+    onError: (msg) => setError(msg),
+  });
 
   const messages = useMemo<ChatMessage[]>(() => convo?.messages ?? [], [convo]);
 
@@ -225,9 +240,7 @@ export function ChatPage() {
     abortRef.current = ac;
     // Optimistic
     qc.setQueryData(
-      mode === 'daily'
-        ? ['chat', 'daily', dateParam]
-        : ['chat', 'one', idParam],
+      mode === 'daily' ? ['chat', 'daily', dateParam] : ['chat', 'one', idParam],
       (prev: ChatConversation | undefined) => {
         if (!prev) return prev;
         return {
@@ -396,7 +409,11 @@ export function ChatPage() {
                 disabled={!createTitle.trim() || createMut.isPending}
                 className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
               >
-                {createMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t('chat.create')}
+                {createMut.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  t('chat.create')
+                )}
               </button>
             </div>
           </BottomSheet>
@@ -481,6 +498,22 @@ export function ChatPage() {
           ) : null}
           <button
             type="button"
+            onClick={() =>
+              voice.open({
+                agent: 'chat',
+                onChanged: () => {
+                  qc.invalidateQueries({ queryKey: ['chat'] });
+                },
+              })
+            }
+            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted"
+            aria-label={t('voice.startVoiceMode')}
+            title={t('voice.startVoiceMode')}
+          >
+            <AudioLines className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
             onClick={() => summaryMut.mutate()}
             disabled={summaryMut.isPending || messages.length === 0}
             className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-muted disabled:opacity-40"
@@ -505,58 +538,65 @@ export function ChatPage() {
       </header>
 
       {/* Summary banner (collapsible) */}
-      {convo?.summary ? (() => {
-          const summary = convo.summary;
-          const PREVIEW_MAX = 90;
-          const preview =
-            summary.length > PREVIEW_MAX ? `${summary.slice(0, PREVIEW_MAX).trimEnd()}…` : summary;
-          const canExpand = summary.length > PREVIEW_MAX;
-          return (
-            <div className="mx-3 mt-3 overflow-hidden rounded-xl border border-primary/30 bg-primary/5 text-sm sm:mx-4">
-              <button
-                type="button"
-                onClick={() => setSummaryOpen((v) => !v)}
-                className="flex w-full items-start gap-2 px-3 py-2 text-left text-xs font-semibold text-primary"
-                aria-expanded={summaryOpen}
-              >
-                <Sparkles className="mt-[2px] h-3.5 w-3.5 shrink-0" />
-                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span>{t('chat.summary')}</span>
-                  {!summaryOpen ? (
-                    <span className="line-clamp-2 break-words text-[11px] font-normal text-foreground/80">
-                      {preview}
-                    </span>
+      {convo?.summary
+        ? (() => {
+            const summary = convo.summary;
+            const PREVIEW_MAX = 90;
+            const preview =
+              summary.length > PREVIEW_MAX
+                ? `${summary.slice(0, PREVIEW_MAX).trimEnd()}…`
+                : summary;
+            const canExpand = summary.length > PREVIEW_MAX;
+            return (
+              <div className="mx-3 mt-3 overflow-hidden rounded-xl border border-primary/30 bg-primary/5 text-sm sm:mx-4">
+                <button
+                  type="button"
+                  onClick={() => setSummaryOpen((v) => !v)}
+                  className="flex w-full items-start gap-2 px-3 py-2 text-left text-xs font-semibold text-primary"
+                  aria-expanded={summaryOpen}
+                >
+                  <Sparkles className="mt-[2px] h-3.5 w-3.5 shrink-0" />
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span>{t('chat.summary')}</span>
+                    {!summaryOpen ? (
+                      <span className="line-clamp-2 break-words text-[11px] font-normal text-foreground/80">
+                        {preview}
+                      </span>
+                    ) : null}
+                  </span>
+                  {canExpand ? (
+                    summaryOpen ? (
+                      <ChevronUp className="mt-[2px] h-4 w-4 shrink-0" />
+                    ) : (
+                      <ChevronDown className="mt-[2px] h-4 w-4 shrink-0" />
+                    )
                   ) : null}
-                </span>
-                {canExpand ? (
-                  summaryOpen ? (
-                    <ChevronUp className="mt-[2px] h-4 w-4 shrink-0" />
-                  ) : (
-                    <ChevronDown className="mt-[2px] h-4 w-4 shrink-0" />
-                  )
-                ) : null}
-              </button>
-              <AnimatePresence initial={false}>
-                {summaryOpen ? (
-                  <motion.div
-                    key="summary-body"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2, ease: 'easeOut' }}
-                  >
-                    <div className="whitespace-pre-wrap break-words px-3 pb-3 leading-relaxed text-foreground/90">
-                      {summary}
-                    </div>
-                  </motion.div>
-                ) : null}
-              </AnimatePresence>
-            </div>
-          );
-        })() : null}
+                </button>
+                <AnimatePresence initial={false}>
+                  {summaryOpen ? (
+                    <motion.div
+                      key="summary-body"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2, ease: 'easeOut' }}
+                    >
+                      <div className="whitespace-pre-wrap break-words px-3 pb-3 leading-relaxed text-foreground/90">
+                        {summary}
+                      </div>
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
+              </div>
+            );
+          })()
+        : null}
 
       {/* Messages */}
-      <div ref={scrollRef} className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-3 py-3 sm:px-4">
+      <div
+        ref={scrollRef}
+        className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-3 py-3 sm:px-4"
+      >
         {messages.length === 0 && !streamBuffer ? (
           <EmptyState
             onPick={(prompt) => send(prompt)}
@@ -607,11 +647,7 @@ export function ChatPage() {
       >
         {imagePreview ? (
           <div className="mb-1.5 flex items-center gap-2 rounded-xl border border-border bg-muted/50 p-1.5">
-            <img
-              src={imagePreview}
-              alt=""
-              className="h-12 w-12 shrink-0 rounded-md object-cover"
-            />
+            <img src={imagePreview} alt="" className="h-12 w-12 shrink-0 rounded-md object-cover" />
             <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
               {imageFile?.name}
             </span>
@@ -646,6 +682,29 @@ export function ChatPage() {
           >
             <ImagePlus className="h-4 w-4" />
           </button>
+          {dictation.supported ? (
+            <button
+              type="button"
+              onClick={() => dictation.toggle()}
+              disabled={dictation.transcribing || streaming || imageMut.isPending}
+              className={cn(
+                'grid h-9 w-9 shrink-0 place-items-center rounded-full transition disabled:opacity-40',
+                dictation.recording
+                  ? 'bg-destructive text-destructive-foreground animate-pulse'
+                  : 'text-muted-foreground hover:bg-muted',
+              )}
+              aria-label={dictation.recording ? t('voice.dictateStop') : t('voice.dictateStart')}
+              title={dictation.recording ? t('voice.dictateStop') : t('voice.dictateStart')}
+            >
+              {dictation.transcribing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : dictation.recording ? (
+                <Square className="h-4 w-4" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+            </button>
+          ) : null}
           {!text.trim() && !imageFile && messages.length === 0 ? (
             <button
               type="button"
@@ -792,7 +851,11 @@ export function ChatPage() {
               disabled={!createTitle.trim() || createMut.isPending}
               className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
             >
-              {createMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t('chat.create')}
+              {createMut.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                t('chat.create')
+              )}
             </button>
           </div>
         </BottomSheet>
