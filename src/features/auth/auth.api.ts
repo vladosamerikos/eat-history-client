@@ -3,7 +3,6 @@ import type { PublicUser } from './auth.store';
 
 export interface AuthResponse {
   user: PublicUser;
-  accessToken: string;
 }
 
 export async function registerUser(input: {

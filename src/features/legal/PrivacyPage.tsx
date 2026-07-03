@@ -18,7 +18,7 @@ export function PrivacyPage() {
   return (
     <main className="mx-auto max-w-2xl p-6">
       <Link to="/" className="text-sm text-primary hover:underline">
-        ← eat-history
+        ← FoodCommit
       </Link>
       <h1 className="mt-4 text-3xl font-semibold">{t('privacy.title')}</h1>
       <p className="mt-1 text-xs text-muted-foreground">

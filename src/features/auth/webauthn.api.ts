@@ -16,7 +16,6 @@ export async function registerPasskey(deviceName?: string): Promise<{ verified: 
 
 export async function loginWithPasskey(email?: string): Promise<{
   user: PublicUser;
-  accessToken: string;
 }> {
   const { options, handle } = await api<{ options: unknown; handle: string }>(
     '/auth/webauthn/login/options',
@@ -24,7 +23,7 @@ export async function loginWithPasskey(email?: string): Promise<{
   );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const assertion = await startAuthentication({ optionsJSON: options as any });
-  return api<{ user: PublicUser; accessToken: string }>('/auth/webauthn/login/verify', {
+  return api<{ user: PublicUser }>('/auth/webauthn/login/verify', {
     method: 'POST',
     json: { handle, response: assertion },
     auth: false,

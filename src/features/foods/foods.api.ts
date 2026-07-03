@@ -1,4 +1,4 @@
-import { api } from '@/lib/api';
+import { api, authenticatedFetch } from '@/lib/api';
 
 export interface Nutrition {
   kcal: number;
@@ -44,16 +44,16 @@ export const deleteFood = (id: string) => api<void>(`/foods/${id}`, { method: 'D
 
 export async function uploadFoodPhoto(foodId: string, file: File): Promise<Food> {
   const { env } = await import('@/config/env');
-  const { useAuthStore } = await import('@/features/auth/auth.store');
-  const token = useAuthStore.getState().accessToken;
   const fd = new FormData();
   fd.append('file', file);
-  const res = await fetch(`${env.apiBaseUrl}/foods/${encodeURIComponent(foodId)}/photo`, {
-    method: 'POST',
-    body: fd,
-    credentials: 'include',
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-  });
+  const res = await authenticatedFetch(
+    `${env.apiBaseUrl}/foods/${encodeURIComponent(foodId)}/photo`,
+    {
+      method: 'POST',
+      body: fd,
+      credentials: 'include',
+    },
+  );
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
     throw new Error(txt || `Upload failed (${res.status})`);

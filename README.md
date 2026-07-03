@@ -1,4 +1,4 @@
-# client (eat-history-web)
+# FoodCommit web client
 
 PWA frontend: Vite + React + TS + Tailwind + i18n + PWA + Framer Motion + GSAP.
 

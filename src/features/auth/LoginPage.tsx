@@ -24,7 +24,7 @@ type FormValues = z.infer<typeof schema>;
 export function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const setSession = useAuthStore((s) => s.setSession);
+  const setUser = useAuthStore((s) => s.setUser);
   const { capabilities } = useCapabilities();
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -36,8 +36,8 @@ export function LoginPage() {
   const onSubmit = form.handleSubmit(async (values) => {
     setServerError(null);
     try {
-      const { user, accessToken } = await loginUser(values);
-      setSession({ user, accessToken });
+      const { user } = await loginUser(values);
+      setUser(user);
       navigate('/app', { replace: true });
     } catch (err) {
       if (err instanceof ApiError) {
@@ -61,7 +61,9 @@ export function LoginPage() {
               {...form.register('email')}
             />
             {form.formState.errors.email && (
-              <span className="text-xs text-destructive">{form.formState.errors.email.message}</span>
+              <span className="text-xs text-destructive">
+                {form.formState.errors.email.message}
+              </span>
             )}
           </label>
 
@@ -69,7 +71,9 @@ export function LoginPage() {
             <span className="text-sm font-medium">{t('auth.password')}</span>
             <PasswordInput autoComplete="current-password" {...form.register('password')} />
             {form.formState.errors.password && (
-              <span className="text-xs text-destructive">{form.formState.errors.password.message}</span>
+              <span className="text-xs text-destructive">
+                {form.formState.errors.password.message}
+              </span>
             )}
           </label>
 
@@ -104,7 +108,7 @@ export function LoginPage() {
             type="button"
             disabled={!capabilities.googleAuth}
             onClick={() => startGoogleLogin(env.apiBaseUrl)}
-            title={!capabilities.googleAuth ? t('auth.disabled.google') ?? '' : undefined}
+            title={!capabilities.googleAuth ? (t('auth.disabled.google') ?? '') : undefined}
             className="h-11 rounded-full border border-border text-sm font-medium hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t('auth.continueWithGoogle')}
@@ -115,8 +119,8 @@ export function LoginPage() {
               setServerError(null);
               try {
                 const email = form.getValues('email') || undefined;
-                const { user, accessToken } = await loginWithPasskey(email);
-                setSession({ user, accessToken });
+                const { user } = await loginWithPasskey(email);
+                setUser(user);
                 navigate('/app', { replace: true });
               } catch (err) {
                 setServerError(err instanceof Error ? err.message : 'Passkey error');

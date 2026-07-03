@@ -86,7 +86,7 @@
   "verify": {
     "title": "Confirming your email…",
     "success": "Email confirmed!",
-    "successHelp": "You can now use all eat-history features.",
+    "successHelp": "You can now use all FoodCommit features.",
     "fail": "We couldn't confirm your email.",
     "failHelp": "The link may have expired. Request a new one.",
     "resend": "Resend confirmation email",
@@ -99,11 +99,11 @@
     "title": "Terms and conditions",
     "linkShort": "terms",
     "lastUpdated": "Last updated: {{date}}",
-    "intro": "These terms govern the use of eat-history. By using the service you accept them.",
+    "intro": "These terms govern the use of FoodCommit. By using the service you accept them.",
     "sections": {
       "use": {
         "title": "Use of the service",
-        "body": "eat-history is a personal tool to log meals. It is not professional medical or nutrition advice."
+        "body": "FoodCommit is a personal tool to log meals. It is not professional medical or nutrition advice."
       },
       "account": {
         "title": "Account",
@@ -117,7 +117,7 @@
         "title": "Liability",
         "body": "Service is offered \"as is\" without warranties. We are not liable for decisions based on the data shown."
       },
-      "contact": { "title": "Contact", "body": "For any question email admin@vladys.dev." }
+      "contact": { "title": "Contact", "body": "For any question email admin@foodcommit.app." }
     }
   },
   "privacy": {
@@ -127,7 +127,7 @@
     "sections": {
       "controller": {
         "title": "Controller",
-        "body": "The data controller is the eat-history team. Contact: admin@vladys.dev."
+        "body": "The data controller is the FoodCommit team. Contact: admin@foodcommit.app."
       },
       "data": {
         "title": "Data we process",
@@ -147,7 +147,7 @@
       },
       "rights": {
         "title": "Your rights",
-        "body": "Access, rectification, deletion, portability, objection. Write to admin@vladys.dev."
+        "body": "Access, rectification, deletion, portability, objection. Write to admin@foodcommit.app."
       },
       "providers": {
         "title": "Providers",
@@ -376,6 +376,38 @@
       "emailMismatch": "Email does not match.",
       "cta": "Delete my account"
     }
+  },
+  "barcodes": {
+    "title": "Scan product",
+    "scanCta": "Scan barcode",
+    "scanCtaHelp": "Find the product or create it from its nutrition label.",
+    "scanHint": "Align the barcode inside the frame. Lookup starts automatically.",
+    "manualPlaceholder": "Enter barcode",
+    "lookup": "Search",
+    "lookingUp": "Looking up product…",
+    "invalid": "Enter a barcode containing 8 to 14 digits.",
+    "notFound": "This product is not in the database. Enter its details or photograph the nutrition label.",
+    "nutritionLabel": "Nutrition label",
+    "productPhoto": "Package photo",
+    "captureLabel": "Photograph the nutrition label",
+    "captureProduct": "Photograph the package or product",
+    "analyzingLabel": "Analyzing the nutrition label…",
+    "labelAnalyzed": "Label analyzed",
+    "nameRequired": "Add the product name.",
+    "brand": "Brand",
+    "quantity": "Package quantity",
+    "portion": "Serving",
+    "portionGrams": "Serving",
+    "portionDescription": "Description",
+    "per100": "Per 100 g",
+    "perServing": "Per serving",
+    "sugars": "Sugars",
+    "saturatedFat": "Saturated fat",
+    "fiber": "Fiber",
+    "salt": "Salt",
+    "useProduct": "Use product",
+    "save": "Save and add",
+    "saved": "Product saved"
   },
   "meals": {
     "title": "Today",

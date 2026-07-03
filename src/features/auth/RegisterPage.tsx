@@ -25,7 +25,7 @@ type FormValues = z.infer<typeof schema>;
 export function RegisterPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const setSession = useAuthStore((s) => s.setSession);
+  const setUser = useAuthStore((s) => s.setUser);
   const [serverError, setServerError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
@@ -36,14 +36,14 @@ export function RegisterPage() {
   const onSubmit = form.handleSubmit(async (values) => {
     setServerError(null);
     try {
-      const { user, accessToken } = await registerUser({
+      const { user } = await registerUser({
         name: values.name,
         email: values.email,
         password: values.password,
         acceptedTerms: values.acceptedTerms,
         locale: i18n.language,
       });
-      setSession({ user, accessToken });
+      setUser(user);
       navigate('/app', { replace: true });
     } catch (err) {
       if (err instanceof ApiError) {
@@ -77,7 +77,9 @@ export function RegisterPage() {
               {...form.register('email')}
             />
             {form.formState.errors.email && (
-              <span className="text-xs text-destructive">{form.formState.errors.email.message}</span>
+              <span className="text-xs text-destructive">
+                {form.formState.errors.email.message}
+              </span>
             )}
           </label>
 
@@ -85,7 +87,9 @@ export function RegisterPage() {
             <span className="text-sm font-medium">{t('auth.password')}</span>
             <PasswordInput autoComplete="new-password" {...form.register('password')} />
             {form.formState.errors.password && (
-              <span className="text-xs text-destructive">{form.formState.errors.password.message}</span>
+              <span className="text-xs text-destructive">
+                {form.formState.errors.password.message}
+              </span>
             )}
           </label>
 
@@ -97,11 +101,19 @@ export function RegisterPage() {
             />
             <span>
               {t('auth.register.termsPrefix')}{' '}
-              <Link to="/terms" target="_blank" className="font-medium text-primary hover:underline">
+              <Link
+                to="/terms"
+                target="_blank"
+                className="font-medium text-primary hover:underline"
+              >
                 {t('terms.linkShort')}
               </Link>{' '}
               {t('auth.register.termsAnd')}{' '}
-              <Link to="/privacy" target="_blank" className="font-medium text-primary hover:underline">
+              <Link
+                to="/privacy"
+                target="_blank"
+                className="font-medium text-primary hover:underline"
+              >
                 {t('privacy.linkShort')}
               </Link>
               .

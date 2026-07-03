@@ -1,4 +1,4 @@
-import { api } from '@/lib/api';
+import { api, authenticatedFetch } from '@/lib/api';
 
 export interface Weight {
   _id: string;
@@ -51,22 +51,18 @@ export const createWeight = (body: CreateWeightInput) =>
 export const updateWeight = (id: string, body: Partial<CreateWeightInput>) =>
   api<Weight>(`/weights/${id}`, { method: 'PATCH', json: body });
 
-export const deleteWeight = (id: string) =>
-  api<void>(`/weights/${id}`, { method: 'DELETE' });
+export const deleteWeight = (id: string) => api<void>(`/weights/${id}`, { method: 'DELETE' });
 
 export async function uploadWeightPhoto(weightId: string, file: File): Promise<Weight> {
   const { env } = await import('@/config/env');
-  const { useAuthStore } = await import('@/features/auth/auth.store');
-  const token = useAuthStore.getState().accessToken;
   const fd = new FormData();
   fd.append('file', file);
-  const res = await fetch(
+  const res = await authenticatedFetch(
     `${env.apiBaseUrl}/weights/${encodeURIComponent(weightId)}/photo`,
     {
       method: 'POST',
       body: fd,
       credentials: 'include',
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     },
   );
   if (!res.ok) {

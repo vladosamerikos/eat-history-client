@@ -1,4 +1,4 @@
-import { api } from '@/lib/api';
+import { api, authenticatedFetch } from '@/lib/api';
 
 export type MealType = 'breakfast' | 'lunch' | 'snack' | 'dinner';
 export const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'snack', 'dinner'];
@@ -49,8 +49,7 @@ export function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export const listMeals = (date?: string) =>
-  api<Meal[]>(`/meals${date ? `?date=${date}` : ''}`);
+export const listMeals = (date?: string) => api<Meal[]>(`/meals${date ? `?date=${date}` : ''}`);
 
 export const dailySummary = (date?: string) =>
   api<DailySummary>(`/meals/summary${date ? `?date=${date}` : ''}`);
@@ -68,16 +67,16 @@ export const deleteMeal = (id: string) => api<void>(`/meals/${id}`, { method: 'D
 
 export async function uploadMealPhoto(mealId: string, file: File): Promise<Meal> {
   const { env } = await import('@/config/env');
-  const { useAuthStore } = await import('@/features/auth/auth.store');
-  const token = useAuthStore.getState().accessToken;
   const fd = new FormData();
   fd.append('file', file);
-  const res = await fetch(`${env.apiBaseUrl}/meals/${encodeURIComponent(mealId)}/photo`, {
-    method: 'POST',
-    body: fd,
-    credentials: 'include',
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-  });
+  const res = await authenticatedFetch(
+    `${env.apiBaseUrl}/meals/${encodeURIComponent(mealId)}/photo`,
+    {
+      method: 'POST',
+      body: fd,
+      credentials: 'include',
+    },
+  );
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
     throw new Error(txt || `Upload failed (${res.status})`);
@@ -93,17 +92,16 @@ export const removeMealPhoto = (id: string) =>
  * `/v1/uploads/...`. Útil cuando la foto se adjunta antes de que exista
  * la comida (p.ej. para que el agente de voz la analice).
  */
-export async function uploadStandalonePhoto(file: File): Promise<{ photoUrl: string; photoKey: string }> {
+export async function uploadStandalonePhoto(
+  file: File,
+): Promise<{ photoUrl: string; photoKey: string }> {
   const { env } = await import('@/config/env');
-  const { useAuthStore } = await import('@/features/auth/auth.store');
-  const token = useAuthStore.getState().accessToken;
   const fd = new FormData();
   fd.append('file', file);
-  const res = await fetch(`${env.apiBaseUrl}/meals/photo-upload`, {
+  const res = await authenticatedFetch(`${env.apiBaseUrl}/meals/photo-upload`, {
     method: 'POST',
     body: fd,
     credentials: 'include',
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
   if (!res.ok) {
     const txt = await res.text().catch(() => '');

@@ -3,42 +3,32 @@ import { useAuthStore } from '@/features/auth/auth.store';
 
 type Options = RequestInit & { json?: unknown; auth?: boolean };
 
-let refreshPromise: Promise<string | null> | null = null;
+let refreshPromise: Promise<boolean> | null = null;
 
 // Hace el POST /auth/refresh real. Solo se llama dentro del lock.
-async function doRefreshOnce(): Promise<string | null> {
+async function doRefreshOnce(): Promise<boolean> {
   try {
     const res = await fetch(`${env.apiBaseUrl}/auth/refresh`, {
       method: 'POST',
       credentials: 'include',
     });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { accessToken: string };
-    useAuthStore.getState().setAccessToken(data.accessToken);
-    return data.accessToken;
+    return res.ok;
   } catch {
-    return null;
+    return false;
   }
 }
 
-// Cross-tab singleflight: si el navegador soporta Web Locks API, serializamos
-// el refresh entre pestañas. Si dentro del lock detectamos que ya hay un
-// access token reciente (otra pestaña terminó antes), lo reutilizamos sin
-// volver a llamar al backend (evita el race que disparaba "reuse detected").
-async function attemptRefresh(): Promise<string | null> {
+// Singleflight local: evita rotaciones duplicadas cuando varias requests reciben
+// un 401 simultáneamente. La sesión real permanece únicamente en cookies HttpOnly.
+async function attemptRefresh(): Promise<boolean> {
   if (refreshPromise) return refreshPromise;
-  const tokenBefore = useAuthStore.getState().accessToken;
   refreshPromise = (async () => {
     try {
       const locks = (typeof navigator !== 'undefined' ? navigator.locks : undefined) as
         | LockManager
         | undefined;
       if (locks && typeof locks.request === 'function') {
-        return await locks.request('eh-auth-refresh', async () => {
-          const current = useAuthStore.getState().accessToken;
-          if (current && current !== tokenBefore) return current;
-          return doRefreshOnce();
-        });
+        return await locks.request('fc-auth-refresh', () => doRefreshOnce());
       }
       return await doRefreshOnce();
     } finally {
@@ -60,13 +50,12 @@ export class ApiError extends Error {
   }
 }
 
-async function doFetch(path: string, options: Options, token: string | null): Promise<Response> {
+async function doFetch(path: string, options: Options): Promise<Response> {
   const { json, headers, auth: _auth, ...rest } = options;
   const finalHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(headers as Record<string, string> | undefined),
   };
-  if (token) finalHeaders.Authorization = `Bearer ${token}`;
   return fetch(`${env.apiBaseUrl}${path}`, {
     credentials: 'include',
     ...rest,
@@ -75,15 +64,29 @@ async function doFetch(path: string, options: Options, token: string | null): Pr
   });
 }
 
+export async function authenticatedFetch(
+  input: RequestInfo | URL,
+  init: RequestInit = {},
+): Promise<Response> {
+  const request = () => fetch(input, { ...init, credentials: 'include' });
+  let res = await request();
+  if (res.status === 401 && (await attemptRefresh())) {
+    res = await request();
+  }
+  if (res.status === 401) useAuthStore.getState().clear();
+  return res;
+}
+
 export async function api<T>(path: string, options: Options = {}): Promise<T> {
   const wantsAuth = options.auth ?? true;
-  const token = wantsAuth ? useAuthStore.getState().accessToken : null;
-  let res = await doFetch(path, options, token);
+  let res = await doFetch(path, options);
 
   if (res.status === 401 && wantsAuth) {
-    const newToken = await attemptRefresh();
-    if (newToken) {
-      res = await doFetch(path, options, newToken);
+    const refreshed = await attemptRefresh();
+    if (refreshed) {
+      res = await doFetch(path, options);
+    } else {
+      useAuthStore.getState().clear();
     }
   }
 

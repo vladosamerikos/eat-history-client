@@ -30,10 +30,10 @@ self.addEventListener('push', (event) => {
     try {
       payload = event.data.json() as PushPayload;
     } catch {
-      payload = { title: 'eat-history', body: event.data.text() };
+      payload = { title: 'FoodCommit', body: event.data.text() };
     }
   }
-  const title = payload.title ?? 'eat-history';
+  const title = payload.title ?? 'FoodCommit';
   const options: NotificationOptions = {
     body: payload.body ?? '',
     tag: payload.tag,

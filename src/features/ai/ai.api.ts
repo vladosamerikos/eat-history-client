@@ -1,6 +1,5 @@
-import { api } from '@/lib/api';
+import { api, authenticatedFetch } from '@/lib/api';
 import { env } from '@/config/env';
-import { useAuthStore } from '@/features/auth/auth.store';
 
 export type AiTier = 'free' | 'preview' | 'paid' | 'limited';
 export type AiCapability = 'vision' | 'text' | 'json';
@@ -75,17 +74,15 @@ export async function estimateNutrition(input: {
   weightG?: number;
   locale?: string;
 }): Promise<EstimateResult> {
-  const token = useAuthStore.getState().accessToken;
   const fd = new FormData();
   if (input.image) fd.append('file', input.image);
   if (input.name) fd.append('name', input.name);
   if (input.weightG != null) fd.append('weightG', String(input.weightG));
   if (input.locale) fd.append('locale', input.locale);
-  const res = await fetch(`${env.apiBaseUrl}/ai/estimate`, {
+  const res = await authenticatedFetch(`${env.apiBaseUrl}/ai/estimate`, {
     method: 'POST',
     body: fd,
     credentials: 'include',
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
@@ -103,16 +100,14 @@ export async function analyzeMealPhoto(input: {
   locale?: string;
   hint?: string;
 }): Promise<AnalyzeMealResult> {
-  const token = useAuthStore.getState().accessToken;
   const fd = new FormData();
   fd.append('file', input.image);
   if (input.locale) fd.append('locale', input.locale);
   if (input.hint) fd.append('hint', input.hint);
-  const res = await fetch(`${env.apiBaseUrl}/ai/analyze-meal-photo`, {
+  const res = await authenticatedFetch(`${env.apiBaseUrl}/ai/analyze-meal-photo`, {
     method: 'POST',
     body: fd,
     credentials: 'include',
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
@@ -131,7 +126,6 @@ export async function transcribeAudio(input: {
   blob: Blob;
   locale?: string;
 }): Promise<{ text: string; modelUsed: string }> {
-  const token = useAuthStore.getState().accessToken;
   const fd = new FormData();
   const ext = input.blob.type.includes('ogg')
     ? 'ogg'
@@ -140,11 +134,10 @@ export async function transcribeAudio(input: {
       : 'webm';
   fd.append('file', input.blob, `dictation.${ext}`);
   if (input.locale) fd.append('locale', input.locale);
-  const res = await fetch(`${env.apiBaseUrl}/ai/transcribe`, {
+  const res = await authenticatedFetch(`${env.apiBaseUrl}/ai/transcribe`, {
     method: 'POST',
     body: fd,
     credentials: 'include',
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
   if (!res.ok) {
     const txt = await res.text().catch(() => '');

@@ -87,7 +87,7 @@
   "verify": {
     "title": "Confirmando tu email…",
     "success": "¡Email confirmado!",
-    "successHelp": "Ya puedes usar todas las funciones de eat-history.",
+    "successHelp": "Ya puedes usar todas las funciones de FoodCommit.",
     "fail": "No hemos podido confirmar tu email.",
     "failHelp": "El enlace puede haber caducado. Solicita uno nuevo.",
     "resend": "Reenviar email de confirmación",
@@ -100,11 +100,11 @@
     "title": "Términos y condiciones",
     "linkShort": "términos",
     "lastUpdated": "Última actualización: {{date}}",
-    "intro": "Estos términos regulan el uso de eat-history. Al usar el servicio aceptas estas condiciones.",
+    "intro": "Estos términos regulan el uso de FoodCommit. Al usar el servicio aceptas estas condiciones.",
     "sections": {
       "use": {
         "title": "Uso del servicio",
-        "body": "eat-history es una herramienta personal para registrar comidas. No es consejo médico ni nutricional profesional."
+        "body": "FoodCommit es una herramienta personal para registrar comidas. No es consejo médico ni nutricional profesional."
       },
       "account": {
         "title": "Cuenta",
@@ -120,7 +120,7 @@
       },
       "contact": {
         "title": "Contacto",
-        "body": "Para cualquier consulta escribe a admin@vladys.dev."
+        "body": "Para cualquier consulta escribe a admin@foodcommit.app."
       }
     }
   },
@@ -131,7 +131,7 @@
     "sections": {
       "controller": {
         "title": "Responsable",
-        "body": "El responsable del tratamiento es el equipo de eat-history. Contacto: admin@vladys.dev."
+        "body": "El responsable del tratamiento es el equipo de FoodCommit. Contacto: admin@foodcommit.app."
       },
       "data": {
         "title": "Datos que tratamos",
@@ -151,7 +151,7 @@
       },
       "rights": {
         "title": "Tus derechos",
-        "body": "Acceso, rectificación, supresión, portabilidad, oposición. Escribe a admin@vladys.dev."
+        "body": "Acceso, rectificación, supresión, portabilidad, oposición. Escribe a admin@foodcommit.app."
       },
       "providers": {
         "title": "Proveedores",
@@ -383,6 +383,38 @@
       "emailMismatch": "El email no coincide.",
       "cta": "Eliminar mi cuenta"
     }
+  },
+  "barcodes": {
+    "title": "Escanear producto",
+    "scanCta": "Escanear código de barras",
+    "scanCtaHelp": "Busca el producto o crea su ficha desde la etiqueta nutricional.",
+    "scanHint": "Alinea el código dentro del recuadro. La búsqueda es automática.",
+    "manualPlaceholder": "Introducir código",
+    "lookup": "Buscar",
+    "lookingUp": "Buscando producto…",
+    "invalid": "Introduce un código de 8 a 14 dígitos.",
+    "notFound": "No está en la base de datos. Completa los datos o fotografía la tabla nutricional.",
+    "nutritionLabel": "Tabla nutricional",
+    "productPhoto": "Foto del envase",
+    "captureLabel": "Fotografía la tabla nutricional",
+    "captureProduct": "Fotografía el envase o producto",
+    "analyzingLabel": "Analizando la tabla nutricional…",
+    "labelAnalyzed": "Etiqueta analizada",
+    "nameRequired": "Añade el nombre del producto.",
+    "brand": "Marca",
+    "quantity": "Cantidad del envase",
+    "portion": "Porción",
+    "portionGrams": "Porción",
+    "portionDescription": "Descripción",
+    "per100": "Por 100 g",
+    "perServing": "Por porción",
+    "sugars": "Azúcares",
+    "saturatedFat": "Grasas saturadas",
+    "fiber": "Fibra",
+    "salt": "Sal",
+    "useProduct": "Usar producto",
+    "save": "Guardar y añadir",
+    "saved": "Producto guardado"
   },
   "meals": {
     "title": "Hoy",

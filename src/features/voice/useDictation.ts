@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { env } from '@/config/env';
-import { useAuthStore } from '@/features/auth/auth.store';
 import { transcribeAudio } from '@/features/ai/ai.api';
 
 type DictationState = 'idle' | 'recording' | 'transcribing';
@@ -32,7 +31,7 @@ function pickMimeType(): string | undefined {
 }
 
 /** Construye la URL wss del gateway de STT a partir del apiBaseUrl. */
-function buildSttUrl(locale: string, token: string): string {
+function buildSttUrl(locale: string): string {
   const base = env.apiBaseUrl;
   let origin: string;
   let prefix: string;
@@ -44,7 +43,7 @@ function buildSttUrl(locale: string, token: string): string {
     origin = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
     prefix = base.replace(/\/$/, '');
   }
-  const sp = new URLSearchParams({ locale, token });
+  const sp = new URLSearchParams({ locale });
   return `${origin}${prefix}/stt/stream?${sp.toString()}`;
 }
 
@@ -158,8 +157,6 @@ export function useDictation({
     cancelledRef.current = false;
     finalRef.current = '';
     interimRef.current = '';
-    const token = useAuthStore.getState().accessToken ?? '';
-
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -172,7 +169,7 @@ export function useDictation({
     // Intentamos modo realtime vía WebSocket.
     let ws: WebSocket;
     try {
-      ws = new WebSocket(buildSttUrl(locale ?? 'es', token));
+      ws = new WebSocket(buildSttUrl(locale ?? 'es'));
     } catch {
       modeRef.current = 'batch';
       startRecorder(stream, undefined, () => void finishBatch());

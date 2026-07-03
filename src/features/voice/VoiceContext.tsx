@@ -7,8 +7,8 @@ export interface VoiceOpenOptions {
   photoUrl?: string;
   /**
    * Qué agente atiende la sesión:
-   * - 'meal' (por defecto): registro rápido de comidas (agentName=eat-history).
-   * - 'chat': coach conversacional configurable (agentName=eat-history-chat).
+   * - 'meal' (por defecto): registro rápido de comidas (agentName=foodcommit).
+   * - 'chat': coach conversacional configurable (agentName=foodcommit-chat).
    */
   agent?: 'meal' | 'chat';
 }

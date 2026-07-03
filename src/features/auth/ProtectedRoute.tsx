@@ -9,9 +9,8 @@ export function ProtectedRoute({
   children: ReactNode;
   requireOnboarding?: boolean;
 }) {
-  const accessToken = useAuthStore((s) => s.accessToken);
   const user = useAuthStore((s) => s.user);
-  if (!accessToken) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/login" replace />;
   if (requireOnboarding && user && !user.onboardingCompleted) {
     return <Navigate to="/onboarding" replace />;
   }

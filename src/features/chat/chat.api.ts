@@ -1,6 +1,5 @@
-import { api } from '@/lib/api';
+import { api, authenticatedFetch } from '@/lib/api';
 import { env } from '@/config/env';
-import { useAuthStore } from '@/features/auth/auth.store';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -89,11 +88,9 @@ export async function sendImageMessage(
   fd.append('file', file);
   if (text) fd.append('text', text);
   if (modelOverride) fd.append('modelOverride', modelOverride);
-  const token = useAuthStore.getState().accessToken;
-  const res = await fetch(`${env.apiBaseUrl}/chat/${chatId}/messages-image`, {
+  const res = await authenticatedFetch(`${env.apiBaseUrl}/chat/${chatId}/messages-image`, {
     method: 'POST',
     credentials: 'include',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: fd,
   });
   if (!res.ok) {
@@ -117,15 +114,13 @@ export async function streamMessage(
   cb: StreamCallbacks,
   signal?: AbortSignal,
 ): Promise<void> {
-  const token = useAuthStore.getState().accessToken;
-  const res = await fetch(`${env.apiBaseUrl}/chat/${chatId}/messages`, {
+  const res = await authenticatedFetch(`${env.apiBaseUrl}/chat/${chatId}/messages`, {
     method: 'POST',
     credentials: 'include',
     signal,
     headers: {
       'Content-Type': 'application/json',
       Accept: 'text/event-stream',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({ text, modelOverride }),
   });

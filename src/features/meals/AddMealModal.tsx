@@ -10,6 +10,7 @@ import {
   Loader2,
   Mic,
   Plus,
+  ScanBarcode,
   Sparkles,
   Trash2,
   X,
@@ -34,6 +35,7 @@ import {
   type MealType,
 } from './meals.api';
 import { Alert } from '@/components/ui/Alert';
+import { BarcodeProductFlow } from '@/features/barcodes/BarcodeProductFlow';
 
 interface Props {
   date: string;
@@ -154,6 +156,8 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
   const [photoSheetOpen, setPhotoSheetOpen] = useState(false);
   // Per-item photo analysis sheet
   const [itemPhotoSheetUid, setItemPhotoSheetUid] = useState<string | null>(null);
+  const [barcodeOpen, setBarcodeOpen] = useState(false);
+  const [barcodeTargetUid, setBarcodeTargetUid] = useState<string | null>(null);
 
   const previewPhoto = useMemo(
     () => (photoFile ? URL.createObjectURL(photoFile) : existingPhotoUrl),
@@ -219,6 +223,22 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
       gramsPerUnit: String(food.defaultPortionG || 100),
       grams: String(food.defaultPortionG || 100),
     });
+  };
+
+  const openBarcode = (uid?: string) => {
+    if (uid) {
+      setBarcodeTargetUid(uid);
+    } else {
+      const available = items.find((item) => !itemHasData(item));
+      if (available) {
+        setBarcodeTargetUid(available.uid);
+      } else {
+        const next = emptyItem();
+        setItems((previous) => [...previous, next]);
+        setBarcodeTargetUid(next.uid);
+      }
+    }
+    setBarcodeOpen(true);
   };
 
   const aiAutocomplete = async (uid: string, mode: 'photo' | 'name') => {
@@ -536,6 +556,25 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
             }
           />
 
+          <button
+            type="button"
+            onClick={() => openBarcode()}
+            className="flex w-full items-center gap-3 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 text-left text-primary transition-colors hover:bg-primary/15"
+          >
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground">
+              <ScanBarcode className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold">
+                {t('barcodes.scanCta') ?? 'Escanear código de barras'}
+              </span>
+              <span className="block text-[11px] text-on-surface-variant">
+                {t('barcodes.scanCtaHelp') ??
+                  'Busca el producto o crea su ficha desde la etiqueta nutricional.'}
+              </span>
+            </span>
+          </button>
+
           {/* Items Form Card */}
           <div className="relative space-y-6 rounded-xl border border-surface-variant bg-surface-container-low p-6">
             <AnimatePresence initial={false}>
@@ -583,6 +622,16 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
                         }
                         actionSlot={
                           <div className="flex flex-shrink-0 items-center gap-1">
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => openBarcode(it.uid)}
+                              title={t('barcodes.scanCta') ?? 'Escanear código'}
+                              className="grid h-8 w-8 place-items-center rounded-md bg-primary/10 text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                              aria-label={t('barcodes.scanCta') ?? 'Escanear código'}
+                            >
+                              <ScanBarcode className="h-4 w-4" />
+                            </button>
                             <button
                               type="button"
                               disabled={busy}
@@ -779,6 +828,19 @@ export function AddMealModal({ date, type, meal, onClose }: Props) {
           if (uid) void analyzeItemPhoto(uid, f);
         }}
       />
+
+      {barcodeOpen && (
+        <BarcodeProductFlow
+          open
+          onClose={() => {
+            setBarcodeOpen(false);
+            setBarcodeTargetUid(null);
+          }}
+          onSelect={(food) => {
+            if (barcodeTargetUid) selectFood(barcodeTargetUid, food);
+          }}
+        />
+      )}
     </div>
   );
 }
